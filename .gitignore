@@ -1,5 +1,35 @@
+# OS files
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# Dependencies
 node_modules/
+
+# Build output
 dist/
-*.log
+build/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# My claude files
 .claude/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

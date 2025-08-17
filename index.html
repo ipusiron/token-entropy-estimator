@@ -3,33 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Token Strength Checker</title>
+  <meta name="description" content="Token Entropy Estimator - トークンやAPIキーの強度をエントロピー測定により評価するセキュリティツール" />
+  <meta name="robots" content="index, follow" />
+  
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  
+  <!-- Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" />
+  
+  <title>Token Entropy Estimator</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="container">
-    <h1>Token Strength Checker</h1>
-    <p class="subtitle">トークン強度チェッカー（エントロピー測定）</p>
+    <h1>Token Entropy Estimator</h1>
+    <p class="subtitle">APIキー・パスワード・トークンの強度を数学的に評価し、総当たり攻撃への耐性を可視化するツール</p>
   </header>
 
   <main class="container">
+    <!-- Welcome Section -->
+    <section class="card welcome-card">
+      <h2>🔐 このツールについて</h2>
+      <div class="welcome-content">
+        <p class="welcome-main">
+          <strong>パスワードやAPIキーが安全かどうか、瞬時に判定します。</strong>
+        </p>
+        <div class="why-important">
+          <h3>なぜ重要？</h3>
+          <p>弱いパスワードは数秒〜数時間で解読される可能性があります。このツールは、あなたのトークンが総当たり攻撃にどれくらい耐えられるかを計算します。</p>
+        </div>
+        <div class="how-to-use">
+          <h3>使い方（3ステップ）</h3>
+          <ol>
+            <li>下の入力欄にパスワードやトークンを貼り付け</li>
+            <li>「解析する」ボタンをクリック</li>
+            <li>結果を確認（🟢強い / 🟡普通 / 🔴弱い）</li>
+          </ol>
+        </div>
+        <div class="example-comparison">
+          <div class="example-weak">
+            <span class="example-label">❌ 弱い例:</span>
+            <code>password123</code> → <span class="crack-time">1秒以内で解読</span>
+          </div>
+          <div class="example-strong">
+            <span class="example-label">✅ 強い例:</span>
+            <code>A7kLw39mQp8Zr2Tx</code> → <span class="crack-time">約7500億年（宇宙の年齢の50倍以上）</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="card">
       <h2>入力</h2>
       <div class="form-row">
-        <label for="token">トークン</label>
-        <textarea id="token" rows="3" placeholder="例）3f1a0b2c...  /  550e8400-e29b-41d4-a716-446655440000  /  QWxhZGRpbjpvcGVuIHNlc2FtZQ=="></textarea>
+        <div class="label-with-samples">
+          <label for="token">トークン</label>
+          <div class="sample-buttons-inline">
+            <span class="sample-label">サンプル:</span>
+            <button data-sample="uuidv4" class="sample-btn">UUID v4</button>
+            <button data-sample="hex32" class="sample-btn">Hex(32)</button>
+            <button data-sample="b64" class="sample-btn">Base64</button>
+            <button data-sample="alnum16" class="sample-btn">英数16</button>
+            <button data-sample="alnum32" class="sample-btn">英数32</button>
+          </div>
+        </div>
+        <textarea id="token" rows="3" maxlength="10000" autocomplete="off" spellcheck="false" placeholder="例）3f1a0b2c...  /  550e8400-e29b-41d4-a716-446655440000  /  QWxhZGRpbjpvcGVuIHNlc2FtZQ=="></textarea>
       </div>
 
       <div class="form-grid">
         <div class="form-row">
-          <label for="rate">試行レート（推測/秒）</label>
-          <input id="rate" type="text" value="1e9" />
-          <small>例：1e9=10億/s, 1e12=1兆/s</small>
+          <label for="rate">攻撃速度の想定 <span class="help-icon" data-help="rate">?</span></label>
+          <select id="rate">
+            <option value="1e6">1e6（＝100万）回/秒 - 通常のWebサービス</option>
+            <option value="1e9" selected>1e9（＝10億）回/秒 - 一般的な攻撃速度</option>
+            <option value="1e12">1e12（＝1兆）回/秒 - 高性能システム</option>
+            <option value="1e15">1e15（＝1000兆）回/秒 - スーパーコンピューター</option>
+          </select>
+          <small>攻撃者の計算能力を想定して選択</small>
         </div>
         <div class="form-row">
-          <label for="thresholds">判定しきい値（弱/普通/強, bits）</label>
-          <input id="thresholds" type="text" value="64,80,100" />
-          <small>カンマ区切りで指定</small>
+          <label for="thresholds">安全レベルの基準 <span class="help-icon" data-help="thresholds">?</span></label>
+          <input id="thresholds" type="text" value="64,80,100" maxlength="50" autocomplete="off" />
+          <small>形式: 弱い上限,普通上限,強い下限（例: 64,80,100）</small>
         </div>
       </div>
 
@@ -37,17 +95,6 @@
         <button id="btnAnalyze">解析する</button>
         <button id="btnClear" class="secondary">クリア</button>
       </div>
-
-      <details class="samples">
-        <summary>サンプルを挿入</summary>
-        <div class="sample-buttons">
-          <button data-sample="uuidv4">UUID v4</button>
-          <button data-sample="hex32">Hex(32)</button>
-          <button data-sample="b64">Base64-ish</button>
-          <button data-sample="alnum16">英数16桁</button>
-          <button data-sample="alnum32">英数32桁</button>
-        </div>
-      </details>
     </section>
 
     <section class="card">
@@ -55,18 +102,18 @@
       <div id="result" class="result">
         <div class="grid-2">
           <div>
-            <div class="kv"><span>長さ</span><strong id="len">-</strong></div>
-            <div class="kv"><span>検出アルファベット</span><strong id="alphabetLabel">-</strong></div>
-            <div class="kv"><span>推定|Σ|</span><strong id="alphabetSize">-</strong></div>
-            <div class="kv"><span>推定エントロピー</span><strong id="entropyBits">-</strong></div>
-            <div class="kv"><span>Shannon参考値</span><strong id="empiricalEntropy">-</strong></div>
+            <div class="kv"><span>文字数</span><strong id="len">-</strong></div>
+            <div class="kv"><span>使用文字の種類</span><strong id="alphabetLabel">-</strong></div>
+            <div class="kv"><span>文字種の数</span><strong id="alphabetSize">-</strong></div>
+            <div class="kv"><span>ランダムさ（ビット）<span class="help-icon" data-help="entropy">?</span></span><strong id="entropyBits">-</strong></div>
+            <div class="kv"><span>文字の偏り度</span><strong id="empiricalEntropy">-</strong></div>
           </div>
           <div>
-            <div class="kv"><span>探索空間（|Σ|^n）</span><strong id="space">-</strong></div>
-            <div class="kv"><span>中央値所要時間</span><strong id="time">-</strong></div>
-            <div class="kv"><span>試行レート</span><strong id="rateEcho">-</strong></div>
-            <div class="kv"><span>判定</span><strong id="rating" class="badge">-</strong></div>
-            <div class="kv"><span>特記事項</span><strong id="notes">-</strong></div>
+            <div class="kv"><span>組み合わせ総数</span><strong id="space">-</strong></div>
+            <div class="kv"><span>解読にかかる時間（平均）<span class="help-icon" data-help="time">?</span></span><strong id="time">-</strong></div>
+            <div class="kv"><span>攻撃速度</span><strong id="rateEcho">-</strong></div>
+            <div class="kv"><span>安全性の判定</span><strong id="rating" class="badge">-</strong></div>
+            <div class="kv"><span>備考</span><strong id="notes">-</strong></div>
           </div>
         </div>
         <div class="progress-wrap">
@@ -78,22 +125,34 @@
     </section>
 
     <section class="card">
-      <h2>判定ルール（概要）</h2>
-      <ul class="bullets">
-        <li>推定エントロピー：<code>H ≈ n * log2(|Σ|)</code>（一様・独立を仮定）</li>
-        <li>中央値所要時間：<code>T ≈ (|Σ|^n)/2 / rate</code></li>
-        <li>Shannon参考値：サンプル内頻度から計算（参考値）</li>
-        <li>特殊フォーマット（UUID v4 / Hex / Base64風）を検出し、適切に |Σ| を補正</li>
-      </ul>
+      <h2>💡 判定の仕組み</h2>
+      <div class="explanation-grid">
+        <div class="explanation-item">
+          <strong>🎯 基本的な考え方</strong>
+          <p>文字の種類が多く、長いほど安全です。</p>
+        </div>
+        <div class="explanation-item">
+          <strong>⏱️ 時間の計算</strong>
+          <p>すべての組み合わせを半分試すのにかかる時間を表示します。</p>
+        </div>
+        <div class="explanation-item">
+          <strong>🔍 自動判別</strong>
+          <p>UUID、16進数、Base64などの形式を自動で認識します。</p>
+        </div>
+        <div class="explanation-item">
+          <strong>📊 判定基準</strong>
+          <p>🔴弱い(&lt;64bit) 🟡普通(64-99bit) 🟢強い(100bit≤) の3段階で評価</p>
+        </div>
+      </div>
     </section>
   </main>
 
   <footer>
     <div class="footer">
-      🔗 GitHubリポジトリはこちら（ <a href="https://github.com/ipusiron/token-strength-checker" target="_blank">ipusiron/token-strength-checker</a> ）
+      🔗 GitHubリポジトリはこちら（ <a href="https://github.com/ipusiron/token-strength-checker" target="_blank" rel="noopener noreferrer">ipusiron/token-strength-checker</a> ）
     </div>
   </footer>
 
-  <script src="script.js"></script>
+  <script src="script.js" defer></script>
 </body>
 </html>

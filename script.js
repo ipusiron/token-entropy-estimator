@@ -1,6 +1,16 @@
 // ===== Helpers =====
 const $ = (id) => document.getElementById(id);
 
+// HTML escape function for security
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function log2(x){ return Math.log(x)/Math.log(2); }
 
 function formatBigIntApprox(num){
@@ -46,15 +56,35 @@ function formatDuration(seconds){
   return parts.length ? parts.join(" ") : "0 sec";
 }
 
-function parseRate(s){
-  // allow "1e9", "1000000", "2.5e12"
-  const v = Number(s);
-  return isFinite(v) && v>0 ? v : 1e9;
+function parseRate(value){
+  // Get value from select element
+  const v = Number(value);
+  // Validate the value
+  if (isFinite(v) && v > 0 && v <= 1e15) {
+    return v;
+  }
+  return 1e9; // Default fallback
+}
+
+function formatRate(rate){
+  // Format rate for display
+  if (rate >= 1e15) return "1000兆回/秒";
+  if (rate >= 1e12) return "1兆回/秒";
+  if (rate >= 1e9) return "10億回/秒";
+  if (rate >= 1e6) return "100万回/秒";
+  return `${rate} 回/秒`;
 }
 
 function parseThresholds(s){
-  const [weak=64, ok=80, strong=100] = s.split(",").map(x=>Number(x.trim())).filter(x=>!isNaN(x));
-  return {weak, ok, strong};
+  // Sanitize and validate thresholds
+  const sanitized = String(s).slice(0, 50); // Limit input length
+  const parts = sanitized.split(",").map(x=>Number(x.trim())).filter(x=>!isNaN(x) && x >= 0 && x <= 1000);
+  const [weak=64, ok=80, strong=100] = parts;
+  // Ensure logical progression
+  const validWeak = Math.min(weak, 500);
+  const validOk = Math.max(validWeak, Math.min(ok, 500));
+  const validStrong = Math.max(validOk, Math.min(strong, 500));
+  return {weak: validWeak, ok: validOk, strong: validStrong};
 }
 
 // ===== Alphabet detection =====
@@ -151,7 +181,11 @@ function powBig(base, exp){
 
 // ===== Main calculation =====
 function analyze(){
-  const token = $("token").value;
+  // Input validation and sanitization
+  const tokenInput = $("token").value;
+  // Limit token length to prevent performance issues
+  const token = tokenInput.slice(0, 10000);
+  
   const rate = parseRate($("rate").value);
   const {weak, ok, strong} = parseThresholds($("thresholds").value);
 
@@ -198,7 +232,7 @@ function analyze(){
     // 中央値時間
     const seconds = Math.pow(2,122) / 2 / rate;
     setText("time", formatDuration(seconds));
-    setText("rateEcho", `${rate} guesses/sec`);
+    setText("rateEcho", formatRate(rate));
   } else {
     setText("alphabetLabel", d.label);
     setText("alphabetSize", d.size ? String(d.size) : "-");
@@ -232,14 +266,26 @@ function analyze(){
 
     const seconds = Math.pow(2, Hbits) / 2 / rate;
     setText("time", formatDuration(seconds));
-    setText("rateEcho", `${rate} guesses/sec`);
+    setText("rateEcho", formatRate(rate));
   }
 
-  // rating
-  let cls="badge", label="—";
-  if (Hbits < weak){ cls+=" weak"; label="弱い"; }
-  else if (Hbits < strong){ cls+=" ok"; label="ふつう"; }
-  else { cls+=" strong"; label="強い"; }
+  // rating with emoji
+  let cls="badge", label="—", emoji="";
+  if (Hbits < weak){ 
+    cls+=" weak"; 
+    label="🔴 弱い"; 
+    emoji = "⚠️";
+  }
+  else if (Hbits < strong){ 
+    cls+=" ok"; 
+    label="🟡 普通"; 
+    emoji = "✓";
+  }
+  else { 
+    cls+=" strong"; 
+    label="🟢 強い"; 
+    emoji = "✅";
+  }
   $("rating").className = cls;
   setText("rating", label);
 
@@ -263,7 +309,11 @@ function mapToBar(bits, w, o, s){
 }
 
 function setText(id, text){
-  $(id).textContent = text;
+  // Use textContent for safety (no HTML injection)
+  const element = $(id);
+  if (element) {
+    element.textContent = text;
+  }
 }
 
 function setBar(pct){
@@ -272,20 +322,20 @@ function setBar(pct){
 
 // ===== Samples & UI =====
 function fillSample(type){
-  let v = "";
-  if (type === "uuidv4"){
-    v = "550e8400-e29b-41d4-a716-446655440000";
-  } else if (type === "hex32"){
-    v = "3f1a0b2c9d7e4a1f0c5b6d8e2a7c9b1d";
-  } else if (type === "b64"){
-    v = "QWxhZGRpbjpvcGVuIHNlc2FtZQ==";
-  } else if (type === "alnum16"){
-    v = "A7kLw39mQp8Zr2Tx";
-  } else if (type === "alnum32"){
-    v = "G5hQmT9Zs1BcK8rV2xY4nP7uD3jL6wEa";
+  // Whitelist approach for sample types
+  const samples = {
+    "uuidv4": "550e8400-e29b-41d4-a716-446655440000",
+    "hex32": "3f1a0b2c9d7e4a1f0c5b6d8e2a7c9b1d",
+    "b64": "QWxhZGRpbjpvcGVuIHNlc2FtZQ==",
+    "alnum16": "A7kLw39mQp8Zr2Tx",
+    "alnum32": "G5hQmT9Zs1BcK8rV2xY4nP7uD3jL6wEa"
+  };
+  
+  const v = samples[type] || "";
+  if (v) {
+    $("token").value = v;
+    analyze();
   }
-  $("token").value = v;
-  analyze();
 }
 
 function clearAll(){
@@ -294,10 +344,25 @@ function clearAll(){
 }
 
 function bind(){
-  $("btnAnalyze").addEventListener("click", analyze);
-  $("btnClear").addEventListener("click", clearAll);
-  document.querySelectorAll(".sample-buttons button").forEach(btn=>{
-    btn.addEventListener("click", ()=> fillSample(btn.dataset.sample));
+  // Prevent event handler duplication
+  $("btnAnalyze").addEventListener("click", analyze, { once: false });
+  $("btnClear").addEventListener("click", clearAll, { once: false });
+  document.querySelectorAll(".sample-btn").forEach(btn=>{
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const sampleType = btn.dataset.sample;
+      // Validate sample type
+      if (sampleType && /^[a-z0-9]+$/i.test(sampleType)) {
+        fillSample(sampleType);
+      }
+    }, { once: false });
+  });
+  
+  // Add input event rate limiting
+  let analyzeTimeout;
+  $("token").addEventListener("input", () => {
+    clearTimeout(analyzeTimeout);
+    analyzeTimeout = setTimeout(analyze, 500);
   });
 }
 
