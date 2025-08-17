@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Token Strength Checker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="container">
+    <h1>Token Strength Checker</h1>
+    <p class="subtitle">トークン強度チェッカー（エントロピー測定）</p>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>入力</h2>
+      <div class="form-row">
+        <label for="token">トークン</label>
+        <textarea id="token" rows="3" placeholder="例）3f1a0b2c...  /  550e8400-e29b-41d4-a716-446655440000  /  QWxhZGRpbjpvcGVuIHNlc2FtZQ=="></textarea>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-row">
+          <label for="rate">試行レート（推測/秒）</label>
+          <input id="rate" type="text" value="1e9" />
+          <small>例：1e9=10億/s, 1e12=1兆/s</small>
+        </div>
+        <div class="form-row">
+          <label for="thresholds">判定しきい値（弱/普通/強, bits）</label>
+          <input id="thresholds" type="text" value="64,80,100" />
+          <small>カンマ区切りで指定</small>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button id="btnAnalyze">解析する</button>
+        <button id="btnClear" class="secondary">クリア</button>
+      </div>
+
+      <details class="samples">
+        <summary>サンプルを挿入</summary>
+        <div class="sample-buttons">
+          <button data-sample="uuidv4">UUID v4</button>
+          <button data-sample="hex32">Hex(32)</button>
+          <button data-sample="b64">Base64-ish</button>
+          <button data-sample="alnum16">英数16桁</button>
+          <button data-sample="alnum32">英数32桁</button>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>結果</h2>
+      <div id="result" class="result">
+        <div class="grid-2">
+          <div>
+            <div class="kv"><span>長さ</span><strong id="len">-</strong></div>
+            <div class="kv"><span>検出アルファベット</span><strong id="alphabetLabel">-</strong></div>
+            <div class="kv"><span>推定|Σ|</span><strong id="alphabetSize">-</strong></div>
+            <div class="kv"><span>推定エントロピー</span><strong id="entropyBits">-</strong></div>
+            <div class="kv"><span>Shannon参考値</span><strong id="empiricalEntropy">-</strong></div>
+          </div>
+          <div>
+            <div class="kv"><span>探索空間（|Σ|^n）</span><strong id="space">-</strong></div>
+            <div class="kv"><span>中央値所要時間</span><strong id="time">-</strong></div>
+            <div class="kv"><span>試行レート</span><strong id="rateEcho">-</strong></div>
+            <div class="kv"><span>判定</span><strong id="rating" class="badge">-</strong></div>
+            <div class="kv"><span>特記事項</span><strong id="notes">-</strong></div>
+          </div>
+        </div>
+        <div class="progress-wrap">
+          <label>強度ゲージ</label>
+          <div class="progress"><div id="strengthBar"></div></div>
+          <small id="progressNote">64/80/100 bitsを基準に可視化</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>判定ルール（概要）</h2>
+      <ul class="bullets">
+        <li>推定エントロピー：<code>H ≈ n * log2(|Σ|)</code>（一様・独立を仮定）</li>
+        <li>中央値所要時間：<code>T ≈ (|Σ|^n)/2 / rate</code></li>
+        <li>Shannon参考値：サンプル内頻度から計算（参考値）</li>
+        <li>特殊フォーマット（UUID v4 / Hex / Base64風）を検出し、適切に |Σ| を補正</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer">
+      🔗 GitHubリポジトリはこちら（ <a href="https://github.com/ipusiron/token-strength-checker" target="_blank">ipusiron/token-strength-checker</a> ）
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
