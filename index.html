@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Token Entropy Estimator - トークンやAPIキーの強度をエントロピー測定により評価するセキュリティツール" />
   <meta name="robots" content="index, follow" />
-  
+
   <!-- Security Headers -->
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  
+
   <!-- Content Security Policy -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" />
-  
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" />
+
   <title>Token Entropy Estimator</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <header class="container">
     <h1>Token Entropy Estimator</h1>
@@ -70,7 +73,8 @@
             <button data-sample="alnum32" class="sample-btn">英数32</button>
           </div>
         </div>
-        <textarea id="token" rows="3" maxlength="10000" autocomplete="off" spellcheck="false" placeholder="例）3f1a0b2c...  /  550e8400-e29b-41d4-a716-446655440000  /  QWxhZGRpbjpvcGVuIHNlc2FtZQ=="></textarea>
+        <textarea id="token" rows="3" maxlength="10000" autocomplete="off" spellcheck="false"
+          placeholder="例）3f1a0b2c...  /  550e8400-e29b-41d4-a716-446655440000  /  QWxhZGRpbjpvcGVuIHNlc2FtZQ=="></textarea>
       </div>
 
       <div class="form-grid">
@@ -105,12 +109,14 @@
             <div class="kv"><span>文字数</span><strong id="len">-</strong></div>
             <div class="kv"><span>使用文字の種類</span><strong id="alphabetLabel">-</strong></div>
             <div class="kv"><span>文字種の数</span><strong id="alphabetSize">-</strong></div>
-            <div class="kv"><span>ランダムさ（ビット）<span class="help-icon" data-help="entropy">?</span></span><strong id="entropyBits">-</strong></div>
+            <div class="kv"><span>ランダムさ（ビット）<span class="help-icon" data-help="entropy">?</span></span><strong
+                id="entropyBits">-</strong></div>
             <div class="kv"><span>文字の偏り度</span><strong id="empiricalEntropy">-</strong></div>
           </div>
           <div>
             <div class="kv"><span>組み合わせ総数</span><strong id="space">-</strong></div>
-            <div class="kv"><span>解読にかかる時間（平均）<span class="help-icon" data-help="time">?</span></span><strong id="time">-</strong></div>
+            <div class="kv"><span>解読にかかる時間（平均）<span class="help-icon" data-help="time">?</span></span><strong
+                id="time">-</strong></div>
             <div class="kv"><span>攻撃速度</span><strong id="rateEcho">-</strong></div>
             <div class="kv"><span>安全性の判定</span><strong id="rating" class="badge">-</strong></div>
             <div class="kv"><span>備考</span><strong id="notes">-</strong></div>
@@ -118,7 +124,9 @@
         </div>
         <div class="progress-wrap">
           <label>強度ゲージ</label>
-          <div class="progress"><div id="strengthBar"></div></div>
+          <div class="progress">
+            <div id="strengthBar"></div>
+          </div>
           <small id="progressNote">64/80/100 bitsを基準に可視化</small>
         </div>
       </div>
@@ -149,10 +157,12 @@
 
   <footer>
     <div class="footer">
-      🔗 GitHubリポジトリはこちら（ <a href="https://github.com/ipusiron/token-strength-checker" target="_blank" rel="noopener noreferrer">ipusiron/token-strength-checker</a> ）
+      🔗 GitHubリポジトリはこちら（ <a href="https://github.com/ipusiron/token-entropy-estimator"
+        target="_blank">ipusiron/token-entropy-estimator</a> ）
     </div>
   </footer>
 
   <script src="script.js" defer></script>
 </body>
+
 </html>
