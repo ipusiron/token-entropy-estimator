@@ -1,11 +1,39 @@
 <!--
 ---
-title: Token Entropy Estimator
-category: genai
+id: day048
+slug: token-entropy-estimator
+
+title: "Token Entropy Estimator"
+
+subtitle_ja: "エントロピー測定によるトークン強度チェッカー"
+subtitle_en: "Token Strength Checker via Entropy Measurement"
+
+description_ja: "パスワード・APIキー・トークンの強度を瞬時に評価し、総当たり攻撃への耐性を可視化するセキュリティツール"
+description_en: "A security tool that instantly evaluates password/API key/token strength and visualizes resistance to brute-force attacks"
+
+category_ja:
+  - 認証
+  - パスワード解読
+  - セキュリティ分析
+category_en:
+  - Authentication
+  - Password Cracking
+  - Security Analysis
+
 difficulty: 4
-description: Estimate token strength via entropy, search space, and crack-time.
-tags: [entropy, token, security, education]
-demo: https://ipusiron.github.io/token-entropy-estimator/
+
+tags:
+  - entropy
+  - token
+  - password
+  - brute-force
+  - security
+  - education
+
+repo_url: "https://github.com/ipusiron/token-entropy-estimator"
+demo_url: "https://ipusiron.github.io/token-entropy-estimator/"
+
+hub: true
 ---
 -->
 

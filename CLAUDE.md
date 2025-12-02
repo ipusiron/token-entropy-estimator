@@ -23,19 +23,24 @@ Token Entropy Estimator - A web-based security tool for evaluating token/secret 
 
 ### Key Algorithms
 
-1. **Format Detection** (script.js:63-77):
+1. **Format Detection** (`detectFormat` at script.js:93-107):
    - UUID v4: Validates format with regex, checks version=4 and variant fields
    - Hex: Detects hexadecimal-only strings
    - Base64-ish: Identifies Base64-like patterns with optional padding
 
-2. **Entropy Calculation** (script.js:153-256):
+2. **Alphabet Detection** (`detectAlphabetSet` at script.js:109-151):
+   - Returns format, label, alphabet size, and hyphen flag
+   - UUID v4: Fixed 16 (hex) with ~122 bits entropy
+   - Detects character classes: lowercase, uppercase, digits, symbols, space
+
+3. **Entropy Calculation** (`analyze` at script.js:183-302):
    - Generic tokens: H = n × log2(|Σ|) where n=length, |Σ|=alphabet size
    - UUID v4: Fixed ~122 bits (accounting for version/variant fixed bits)
-   - Search space: |Σ|^n calculated with BigInt for large values
+   - Search space: |Σ|^n calculated with BigInt (`powBig` at script.js:168-180)
 
-3. **Strength Classification**:
+4. **Strength Classification** (script.js:274-288):
    - Weak: < 64 bits
-   - Normal: 64-99 bits  
+   - Normal: 64-99 bits
    - Strong: ≥ 100 bits
 
 ## Common Development Tasks
@@ -65,10 +70,12 @@ This is a static site suitable for GitHub Pages:
 ## Code Conventions
 
 - Pure vanilla JavaScript (no frameworks or libraries)
-- Helper functions use arrow notation or function declaration
-- DOM access via simple `$` helper function
-- BigInt used for large number calculations to avoid overflow
+- DOM access via `$` helper (script.js:2): `const $ = (id) => document.getElementById(id)`
+- BigInt used for large number calculations to avoid overflow (`powBig`)
 - Japanese text used in UI labels (bilingual project)
+- `textContent` used instead of `innerHTML` for XSS prevention
+- Input length limits enforced (token: 10000 chars, thresholds: 50 chars)
+- Whitelist approach for sample token types (`fillSample`)
 
 ## Security Considerations
 
