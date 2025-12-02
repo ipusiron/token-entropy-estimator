@@ -39,11 +39,11 @@ hub: true
 
 # Token Entropy Estimator - エントロピー測定によるトークン強度チェッカー
 
-![GitHub Repo stars](https://img.shields.io/github/stars/ipusiron/token-strength-checker?style=social)
-![GitHub forks](https://img.shields.io/github/forks/ipusiron/token-strength-checker?style=social)
-![GitHub last commit](https://img.shields.io/github/last-commit/ipusiron/token-strength-checker)
-![GitHub license](https://img.shields.io/github/license/ipusiron/token-strength-checker)
-[![GitHub Pages](https://img.shields.io/badge/demo-GitHub%20Pages-blue?logo=github)](https://ipusiron.github.io/token-strength-checker/)
+![GitHub Repo stars](https://img.shields.io/github/stars/ipusiron/token-entropy-estimator?style=social)
+![GitHub forks](https://img.shields.io/github/forks/ipusiron/token-entropy-estimator?style=social)
+![GitHub last commit](https://img.shields.io/github/last-commit/ipusiron/token-entropy-estimator)
+![GitHub license](https://img.shields.io/github/license/ipusiron/token-entropy-estimator)
+[![GitHub Pages](https://img.shields.io/badge/demo-GitHub%20Pages-blue?logo=github)](https://ipusiron.github.io/token-entropy-estimator/)
 
 **Day048 - 生成AIで作るセキュリティツール100**
 
@@ -61,7 +61,7 @@ hub: true
 
 ## 🌐 デモページ
 
-👉 **[https://ipusiron.github.io/token-strength-checker/](https://ipusiron.github.io/token-strength-checker/)**
+👉 **[https://ipusiron.github.io/token-entropy-estimator/](https://ipusiron.github.io/token-entropy-estimator/)**
 
 ブラウザーで直接お試しいただけます。
 
