@@ -1,0 +1,8 @@
+{
+  "name": "token-entropy-estimator",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
