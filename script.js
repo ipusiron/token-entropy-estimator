@@ -111,7 +111,9 @@
     const d = r.details;
     if (d.kind === 'nil' || d.kind === 'max') return [t('fmt.uuidSpecial')];
     if (d.kind === 'uuidOther') return [t('fmt.uuidOther')];
-    const byVersion = { 4: 'fmt.uuid4', 7: 'fmt.uuid7', 1: 'fmt.uuidTime', 2: 'fmt.uuidTime', 6: 'fmt.uuidTime', 3: 'fmt.uuidName', 5: 'fmt.uuidName', 8: 'fmt.uuid8' };
+    const byVersion = {
+      4: 'fmt.uuid4', 7: 'fmt.uuid7', 1: 'fmt.uuidTime', 2: 'fmt.uuidTime', 6: 'fmt.uuidTime', 3: 'fmt.uuidName', 5: 'fmt.uuidName', 8: 'fmt.uuid8'
+    };
     return [t(byVersion[d.version] || 'fmt.uuidOtherVersion')];
   }
 
@@ -236,7 +238,32 @@
     }
   }
 
+  // ヘルプ（dialog）。? ボタンの話題だけを見せ、閉じたら押したボタンへフォーカスを戻す
+  function initHelp() {
+    const dialog = $('helpDialog');
+    let opener = null;
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.help-icon');
+      if (!btn) return;
+      for (const topic of dialog.querySelectorAll('.help-topic')) topic.hidden = topic.dataset.helpTopic !== btn.dataset.help;
+      $('helpTitle').textContent = btn.getAttribute('aria-label');
+      opener = btn;
+      dialog.showModal();
+      $('helpClose').focus();
+    });
+    $('helpClose').addEventListener('click', () => dialog.close());
+    // 背景（dialog の外側）を押したら閉じる
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    dialog.addEventListener('close', () => {
+      if (opener) opener.focus();
+    });
+  }
+
   bind();
+  initHelp();
+  globalThis.TokenTheme.init($('btnTheme'), t);
   render();
   document.documentElement.setAttribute('data-ready', 'true');
 })();

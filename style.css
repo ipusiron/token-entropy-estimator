@@ -116,6 +116,127 @@ a {
 .header-inner {
   max-width: 960px;
   margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 8px;
+}
+
+.header-side {
+  display: none;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* 広い画面では、タイトルを画面の中央に、ボタンを右端に置く */
+@media (min-width: 769px) {
+  .header-inner {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .header-side {
+    display: block;
+  }
+
+  .header-buttons {
+    justify-self: end;
+  }
+}
+
+.icon-btn {
+  min-width: 44px;
+  padding: 0 12px;
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+  font-size: 1.2rem;
+}
+
+.icon-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+/* ? ボタン: 押せる範囲は44px、見える丸は28px */
+.label-help,
+.heading-help {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.heading-help h3 {
+  margin-top: 20px;
+}
+
+.help-icon {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--surface-2) 0 13px, var(--border) 13px 14px, transparent 14.5px);
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.help-icon:hover {
+  background: radial-gradient(circle, var(--border) 0 14px, transparent 14.5px);
+  color: var(--text);
+}
+
+.help-dialog {
+  max-width: min(600px, calc(100vw - 32px));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.help-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.help-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.help-head h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.help-head button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* 前提の欄: ? ボタンのある見出しと、ない見出しの高さをそろえ、入力欄の位置を並べる */
+.field > label,
+.field > .label-help {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.help-topic p {
+  margin: 10px 0;
+}
+
+.help-topic[hidden] {
+  display: none;
 }
 
 .site-header h1 {
