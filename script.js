@@ -139,6 +139,7 @@
   function renderNotes(r) {
     const items = [...formatNotes(r), ...r.warnings.map(warningText)];
     if (looksHuman(r) && r.basis !== 'pattern') items.push(t('w.human'));
+    if (!items.length && !r.empty) items.push(t('notes.none'));
     $('notes').replaceChildren(...items.map((s) => el('li', { text: s })));
   }
 
@@ -253,7 +254,8 @@
     set('batchSum', t('batch.bits', { bits: fmtBits(r.sumMinEntropy) }));
     set('batchBaseline', r.baselineSum ? t('batch.bits', { bits: fmtBits(r.baselineSum) }) : '—');
     set('batchSingle', r.singleBits ? t('batch.bits', { bits: fmtBits(r.singleBits) }) : '—');
-    $('batchNotes').replaceChildren(...r.warnings.map((w) => el('li', { text: batchWarning(w) })));
+    const notes = r.warnings.length ? r.warnings.map(batchWarning) : [t('notes.none')];
+    $('batchNotes').replaceChildren(...notes.map((text) => el('li', { text })));
     renderBatchChart(r);
   }
 
@@ -291,6 +293,90 @@
         analyzeBatch();
       });
     }
+  }
+
+  // ===== 安全なトークンを作る =====
+  const GEN_IDS = ['hex', 'base32', 'base62', 'base64url', 'digits', 'printable'];
+  const genName = (id) => t(id === 'printable' ? 'cs.printable94' : `cs.${id}`);
+
+  // 選択肢と表は言語に合わせて作り直す（選んでいた値は残す）
+  function renderGenControls() {
+    const alpha = $('genAlphabet');
+    const bits = $('genBits');
+    const keepA = alpha.value || 'base62';
+    const keepB = bits.value || String(TE.standardBits(TE.DEFAULT_STANDARD));
+    alpha.replaceChildren(...GEN_IDS.map((id) => el('option', { value: id, text: genName(id) })));
+    const label = (s) => t('gen.bitsOption', { bits: s.bits, name: t(`std.${s.id}`) });
+    bits.replaceChildren(...TE.STANDARDS.map((s) => el('option', { value: String(s.bits), text: label(s) })));
+    alpha.value = keepA;
+    bits.value = keepB;
+    const head = $('lengthTable').querySelector('thead tr');
+    head.replaceChildren(el('th', { scope: 'col', text: t('ui.genColStandard') }), ...GEN_IDS.map((id) => el('th', { scope: 'col', text: genName(id) })));
+    $('lengthTable').querySelector('tbody').replaceChildren(...TE.STANDARDS.map((s) => el('tr', {}, [
+      el('th', { scope: 'row', text: label(s) }),
+      ...GEN_IDS.map((id) => el('td', { 'data-label': genName(id), text: String(TE.requiredLength(s.bits, TE.GEN_ALPHABETS[id].length)) }))
+    ])));
+    renderGenInfo();
+  }
+
+  function genSettings() {
+    const id = $('genAlphabet').value;
+    const k = TE.GEN_ALPHABETS[id].length;
+    const length = TE.requiredLength(Number($('genBits').value), k);
+    return { id, k, length };
+  }
+
+  function renderGenInfo() {
+    const { k, length } = genSettings();
+    $('genLength').textContent = t('gen.length', { n: length, bits: fmtBits(length * Math.log2(k)) });
+    const b = TE.moduloBias(k);
+    $('genBias').textContent = b.remainder
+      ? t('gen.bias', { k, r: b.remainder, ratio: TE.roundForDisplay(b.ratio), loss: b.minEntropyLoss.toFixed(3), total: (b.minEntropyLoss * length).toFixed(2),
+        limit: 256 - b.remainder })
+      : t('gen.biasNone', { k });
+  }
+
+  function say(key, vars = {}) {
+    state.genStatus = { key, vars };
+    $('genStatus').textContent = t(key, vars);
+  }
+
+  function bindGen() {
+    renderGenControls();
+    $('genAlphabet').addEventListener('change', renderGenInfo);
+    $('genBits').addEventListener('change', renderGenInfo);
+    $('genMake').addEventListener('click', () => {
+      const { id, length } = genSettings();
+      $('genOutput').value = TE.generate(id, length, cryptoBytes);
+      say('gen.made', { n: length });
+    });
+    $('genCopy').addEventListener('click', async () => {
+      const v = $('genOutput').value;
+      if (!v) return;
+      try {
+        await navigator.clipboard.writeText(v);
+        say('gen.copied');
+      } catch (e) {
+        $('genOutput').select();
+        say('gen.copyFailed');
+      }
+    });
+    $('genToResult').addEventListener('click', () => {
+      const v = $('genOutput').value;
+      if (!v) return;
+      $('token').value = v;
+      state.token = v;
+      render();
+      $('resultHeading').scrollIntoView({ block: 'start' });
+      $('token').focus({ preventScroll: true });
+    });
+    $('genToBatch').addEventListener('click', () => {
+      const { id, length } = genSettings();
+      $('batch').value = Array.from({ length: 100 }, () => TE.generate(id, length, cryptoBytes)).join('\n');
+      state.batch = $('batch').value;
+      analyzeBatch();
+      say('gen.sentBatch');
+    });
   }
 
   function render() {
@@ -384,6 +470,8 @@
       I18N.use(next, document);
       I18N.save(next);
       globalThis.TokenTheme.refresh($('btnTheme'), t);
+      renderGenControls();
+      if (state.genStatus) $('genStatus').textContent = t(state.genStatus.key, state.genStatus.vars);
       render();
     });
   }
@@ -391,6 +479,7 @@
   initLanguage();
   bind();
   bindBatch();
+  bindGen();
   initHelp();
   globalThis.TokenTheme.init($('btnTheme'), t);
   render();

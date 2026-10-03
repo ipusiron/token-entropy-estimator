@@ -709,3 +709,46 @@ button.secondary:hover {
   right: 0;
   border-top: 2px dotted var(--text);
 }
+
+/* 安全なトークンを作る・関連ツール */
+.gen-length {
+  margin: 12px 0 4px;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+#genOutput {
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  margin-top: 6px;
+}
+
+.status {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.status:empty {
+  display: none;
+}
+
+.related {
+  margin: 0;
+  padding-left: 1.4em;
+}
+
+.related li {
+  margin: 6px 0;
+}
+
+.related-desc {
+  display: block;
+  color: var(--muted);
+  font-size: 0.95rem;
+}

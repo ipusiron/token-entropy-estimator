@@ -210,6 +210,42 @@
       <ul id="batchNotes" class="notes" aria-live="polite"></ul>
     </section>
 
+    <section class="card" aria-labelledby="genHeading">
+      <h2 id="genHeading" data-i18n="ui.genHeading">安全なトークンを作る</h2>
+      <p data-i18n="ui.genIntro">目標のビット数と文字の集合から、必要な長さが決まります。ブラウザーの暗号用の乱数（crypto.getRandomValues）で、偏りが出ない方法（棄却法）で作ります。作ったトークンはどこにも送りません。</p>
+      <h3 data-i18n="ui.genTableHeading">必要な長さ（文字数）</h3>
+      <div class="table-wrap">
+        <table class="data-table" id="lengthTable">
+          <thead><tr></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="genAlphabet" data-i18n="ui.genAlphabetLabel">文字の集合</label>
+          <select id="genAlphabet"></select>
+        </div>
+        <div class="field">
+          <label for="genBits" data-i18n="ui.genBitsLabel">目標のビット数</label>
+          <select id="genBits"></select>
+        </div>
+      </div>
+      <p id="genLength" class="gen-length"></p>
+      <p id="genBias" class="note"></p>
+      <p class="note" data-i18n="ui.genRandomNote">Math.random は暗号用の乱数ではないので使いません。</p>
+      <div class="button-row">
+        <button type="button" id="genMake" data-i18n="ui.genMake">作る</button>
+      </div>
+      <label for="genOutput" data-i18n="ui.genOutputLabel">作ったトークン</label>
+      <input id="genOutput" type="text" readonly autocomplete="off" spellcheck="false" />
+      <div class="button-row">
+        <button type="button" id="genCopy" class="secondary" data-i18n="ui.genCopy">コピー</button>
+        <button type="button" id="genToResult" class="secondary" data-i18n="ui.genToResult">結果欄で見る</button>
+        <button type="button" id="genToBatch" class="secondary" data-i18n="ui.genToBatch">100個を一括分析へ</button>
+      </div>
+      <p id="genStatus" class="status" aria-live="polite"></p>
+    </section>
+
     <section class="card" aria-labelledby="howHeading">
       <h2 id="howHeading" data-i18n="ui.howHeading">見積もりの仕組み</h2>
       <div class="how-grid">
@@ -219,6 +255,19 @@
         <div class="how-item"><h3 data-i18n="ui.howTimeTitle">時間</h3><p data-i18n="ui.howTime">候補は「2のビット数乗」通りあり、それを場面ごとの速さで試すとして、当たるまでの時間を出します。有効な値が多いほど、どれか1つには早く当たります。</p></div>
         <div class="how-item"><h3 data-i18n="ui.howLimitTitle">限界</h3><p data-i18n="ui.howLimit">1本の文字列からは、ランダムに作ったかどうかは分かりません。分かるのは上限と、明らかな構造（同じ文字の繰り返し・並び・中身が読める）だけです。</p></div>
       </div>
+    </section>
+    <section class="card" aria-labelledby="relatedHeading">
+      <h2 id="relatedHeading" data-i18n="ui.relatedHeading">関連ツール</h2>
+      <ul class="related">
+        <li><a href="https://ipusiron.github.io/password-checker/" target="_blank" rel="noopener noreferrer">Day001 Password Checker</a><span class="related-desc" data-i18n="ui.relatedDay001">人が考えたパスワードの強さを、辞書や規則も含めて確かめる</span></li>
+        <li><a href="https://ipusiron.github.io/hash-detector/" target="_blank" rel="noopener noreferrer">Day002 Hash Detector</a><span class="related-desc" data-i18n="ui.relatedDay002">16進数の文字列が、どのハッシュ関数の値かを見分ける</span></li>
+        <li><a href="https://ipusiron.github.io/git-secrets-playground/" target="_blank" rel="noopener noreferrer">Day031 Git Secrets Playground</a><span class="related-desc" data-i18n="ui.relatedDay031">Gitに秘密情報を入れてしまったときの、見つかり方と消し方を試す</span></li>
+        <li><a href="https://ipusiron.github.io/basexx-visualizer/" target="_blank" rel="noopener noreferrer">Day052 BaseXX Visualizer</a><span class="related-desc" data-i18n="ui.relatedDay052">Base32・Base58・Base64などの符号化の違いを比べる</span></li>
+        <li><a href="https://ipusiron.github.io/jwt-inspector/" target="_blank" rel="noopener noreferrer">Day053 JWT Inspector</a><span class="related-desc" data-i18n="ui.relatedDay053">JWTのヘッダー・ペイロード・署名を読み、検証する</span></li>
+        <li><a href="https://ipusiron.github.io/infoquantity-academy/" target="_blank" rel="noopener noreferrer">Day073 InfoQuantity Academy</a><span class="related-desc" data-i18n="ui.relatedDay073">情報量（ビット）の考え方を基礎から学ぶ</span></li>
+        <li><a href="https://ipusiron.github.io/keywalk-analyzer/" target="_blank" rel="noopener noreferrer">Day089 Keywalk Analyzer</a><span class="related-desc" data-i18n="ui.relatedDay089">キーボードの並びに頼ったパスワードを見つける</span></li>
+      </ul>
+      <p class="note" data-i18n="ui.relatedNote">リンクはページを開くだけで、入力したトークンは渡しません。</p>
     </section>
     <dialog id="helpDialog" class="help-dialog" aria-labelledby="helpTitle">
       <div class="help-head">

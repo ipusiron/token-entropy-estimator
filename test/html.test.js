@@ -38,7 +38,8 @@ test('画面の要素の id がそろっている（それぞれ1つだけ）', 
     'validError', 'gpus', 'gpusError', 'customRate', 'customRateError', 'verdict', 'bits', 'bitsKind', 'format', 'alphabet', 'counted', 'perChar',
     'shannon', 'gauge', 'gaugeFill', 'gaugeMark', 'notes', 'timeTable', 'scanTable', 'btnTheme', 'btnLang', 'helpDialog', 'helpTitle', 'helpClose',
     'batch', 'batchClear', 'batchVerdict', 'batchCount', 'batchLength', 'batchAlphabet', 'batchDup', 'batchSum', 'batchBaseline', 'batchSingle',
-    'batchChart', 'batchNotes'];
+    'batchChart', 'batchNotes', 'lengthTable', 'genAlphabet', 'genBits', 'genLength', 'genBias', 'genMake', 'genOutput', 'genCopy', 'genToResult',
+    'genToBatch', 'genStatus'];
   for (const id of ids) assert.equal(html.split(`id="${id}"`).length - 1, 1, id);
   const all = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
   assert.equal(new Set(all).size, all.length);
@@ -47,7 +48,7 @@ test('画面の要素の id がそろっている（それぞれ1つだけ）', 
 test('ボタンには type、入力欄にはラベル、状態の表示は aria-live、外部リンクは noopener noreferrer', () => {
   for (const m of html.matchAll(/<button\b[^>]*>/g)) assert.match(m[0], /type="button"/, m[0]);
   for (const m of html.matchAll(/<(input|textarea|select)\b[^>]*id="([^"]+)"/g)) assert.match(html, new RegExp(`<label for="${m[2]}"`), m[2]);
-  for (const id of ['verdict', 'notes', 'customBitsError', 'validError', 'gpusError', 'customRateError', 'batchVerdict', 'batchNotes']) {
+  for (const id of ['verdict', 'notes', 'customBitsError', 'validError', 'gpusError', 'customRateError', 'batchVerdict', 'batchNotes', 'genStatus']) {
     assert.match(html, new RegExp(`id="${id}"[^>]*aria-live="polite"`), id);
   }
   for (const m of html.matchAll(/<a\b[^>]*target="_blank"[^>]*>/g)) assert.match(m[0], /rel="noopener noreferrer"/, m[0]);
