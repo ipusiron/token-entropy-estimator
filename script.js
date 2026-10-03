@@ -195,7 +195,9 @@
     $('format').textContent = r.empty ? '—' : formatName(r);
     $('alphabet').textContent = alphabetName(r.alphabet);
     $('counted').textContent = r.counted ? t('counted.value', { counted: r.counted, length: r.length }) : '—';
-    $('perChar').textContent = r.bits && r.counted ? t('perChar.value', { bits: (r.bits / r.counted).toFixed(3) }) : '—';
+    // 1文字あたりは、文字の集合で数えたときだけ（UUID は形式の決まりで数えるので、文字で割っても意味がない）
+    const perChar = r.bits && r.counted && (r.bitsKind === 'uniform' || r.format === 'github');
+    $('perChar').textContent = perChar ? t('perChar.value', { bits: (r.bits / r.counted).toFixed(3) }) : '—';
     $('shannon').textContent = r.empty ? '—' : t('shannon.value', { v: r.shannon.perChar.toFixed(3), max: r.shannon.maxPerChar.toFixed(3) });
     renderGauge(r.bits, s.threshold);
     renderNotes(r);
@@ -261,6 +263,21 @@
     });
   }
 
+  // 言語の切り替え: 静的な文言を差し替え、入力と前提はそのままで結果を描き直す
+  function initLanguage() {
+    const I18N = globalThis.TokenI18n;
+    const nav = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+    I18N.use(I18N.initialLanguage(location.search, I18N.readSaved(), nav), document);
+    $('btnLang').addEventListener('click', () => {
+      const next = getLanguage() === 'ja' ? 'en' : 'ja';
+      I18N.use(next, document);
+      I18N.save(next);
+      globalThis.TokenTheme.refresh($('btnTheme'), t);
+      render();
+    });
+  }
+
+  initLanguage();
   bind();
   initHelp();
   globalThis.TokenTheme.init($('btnTheme'), t);

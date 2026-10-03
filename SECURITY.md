@@ -2,38 +2,28 @@
 
 ## Security Considerations
 
-This Token Entropy Estimator is designed with security in mind for safe deployment on GitHub Pages:
+Token Entropy Estimator is a static page for GitHub Pages. It handles secrets that you paste, so it is designed so that they never leave the browser.
 
 ### Client-Side Only
-- All calculations are performed entirely in the browser
-- No data is sent to any external servers
-- No cookies or local storage is used to store tokens
-- Input tokens remain private to the user
+- All calculations run in the browser. Nothing is sent to a server, and the token is never put in the URL
+- The token is not stored. localStorage keeps only the theme and language choices (the tool still works where storage is unavailable)
+- The page also works when `index.html` is opened directly as a file (`file://`), so it can be used offline
 
-### Input Validation
-- Token input is limited to 10,000 characters to prevent performance issues
-- Rate input is capped at 1e15 to prevent numerical overflow
-- Threshold values are validated and limited to reasonable ranges (0-500 bits)
-- All user inputs are sanitized using `textContent` (not `innerHTML`) to prevent XSS
+### Input Handling
+- Only the first 10,000 characters (code points) are analyzed
+- Every input and result is written with `textContent`, never interpreted as HTML (no `innerHTML`)
+- Numeric fields (bits, valid values, GPUs, custom speed) are validated, and invalid input is reported next to the field instead of being silently replaced
 
-### Content Security Policy
-The application implements a strict CSP that:
-- Blocks all external connections (`connect-src 'none'`)
-- Prevents framing attacks (`frame-ancestors 'none'`)
-- Restricts base URIs (`base-uri 'self'`)
-- Limits form actions (`form-action 'self'`)
+### Content Security Policy (meta)
+- `default-src 'self'`, `script-src 'self'`, `style-src 'self'`, `img-src 'self' data:`
+- `connect-src 'none'` (no network connections from scripts), `object-src 'none'`, `base-uri 'none'`, `form-action 'none'`
+- No inline scripts, inline event handlers or `style` attributes are used, so `'unsafe-inline'` is not needed
+- `frame-ancestors`, `X-Frame-Options` and `X-Content-Type-Options` cannot be set with `<meta>` (browsers ignore them there), and GitHub Pages does not let a repository set response headers. They are therefore not claimed
 
-### Additional Security Headers
-- `X-Content-Type-Options: nosniff` - Prevents MIME type sniffing
-- `X-Frame-Options: SAMEORIGIN` - Prevents clickjacking
-- `Referrer-Policy: strict-origin-when-cross-origin` - Controls referrer information
-
-### Best Practices
-- Uses `defer` attribute for script loading
-- Implements `rel="noopener noreferrer"` on external links
-- Includes `autocomplete="off"` on sensitive input fields
-- Implements input rate limiting to prevent UI freezing
-- Uses whitelisting approach for sample data insertion
+### Other Measures
+- `<meta name="referrer" content="no-referrer">`
+- External links open in a new tab with `rel="noopener noreferrer"`
+- No external libraries, CDNs or fonts are loaded
 
 ## Reporting Security Issues
 
@@ -43,4 +33,4 @@ If you discover a security vulnerability, please report it via:
 
 ## Disclaimer
 
-This tool is for educational and design validation purposes only. It provides entropy estimates based on uniform distribution assumptions and should not be used as the sole criterion for cryptographic security validation.
+This tool is for education and design support. The bits it shows are an upper bound under the assumption of a uniform random generator; a single string cannot prove that it was generated randomly. Do not use it as the only check for cryptographic security.

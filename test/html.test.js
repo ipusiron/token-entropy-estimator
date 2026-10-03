@@ -24,9 +24,9 @@ test('インラインのスクリプト・イベントハンドラー・style �
   assert.doesNotMatch(html, /\sstyle=/);
   assert.doesNotMatch(html, /type="module"/);
   const scripts = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(scripts, ['js/theme-init.js', 'js/messages.js', 'js/samples.js', 'js/entropy-core.js', 'js/theme.js', 'script.js']);
+  assert.deepEqual(scripts, ['js/theme-init.js', 'js/messages.js', 'js/i18n.js', 'js/samples.js', 'js/entropy-core.js', 'js/theme.js', 'script.js']);
   for (const s of scripts.slice(1)) assert.match(html, new RegExp(`<script src="${s}" defer></script>`));
-  for (const f of ['script.js', 'js/theme.js', 'js/entropy-core.js']) {
+  for (const f of ['script.js', 'js/theme.js', 'js/entropy-core.js', 'js/i18n.js']) {
     const src = read(f);
     assert.doesNotMatch(src, /innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function/, f);
     assert.doesNotMatch(src, /\.cssText|setAttribute\('style'|alert\(|confirm\(/, f);
@@ -36,7 +36,7 @@ test('インラインのスクリプト・イベントハンドラー・style �
 test('画面の要素の id がそろっている（それぞれ1つだけ）', () => {
   const ids = ['token', 'btnClear', 'charset', 'customSizeField', 'customSize', 'standard', 'customBitsField', 'customBits', 'customBitsError', 'valid',
     'validError', 'gpus', 'gpusError', 'customRate', 'customRateError', 'verdict', 'bits', 'bitsKind', 'format', 'alphabet', 'counted', 'perChar',
-    'shannon', 'gauge', 'gaugeFill', 'gaugeMark', 'notes', 'timeTable', 'scanTable', 'btnTheme', 'helpDialog', 'helpTitle', 'helpClose'];
+    'shannon', 'gauge', 'gaugeFill', 'gaugeMark', 'notes', 'timeTable', 'scanTable', 'btnTheme', 'btnLang', 'helpDialog', 'helpTitle', 'helpClose'];
   for (const id of ids) assert.equal(html.split(`id="${id}"`).length - 1, 1, id);
   const all = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
   assert.equal(new Set(all).size, all.length);

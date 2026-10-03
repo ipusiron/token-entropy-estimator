@@ -114,7 +114,7 @@ a {
 }
 
 .header-inner {
-  max-width: 960px;
+  max-width: 1120px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -128,11 +128,12 @@ a {
 
 .header-buttons {
   display: flex;
+  align-items: flex-start;
   gap: 8px;
 }
 
-/* 広い画面では、タイトルを画面の中央に、ボタンを右端に置く */
-@media (min-width: 769px) {
+/* 広い画面では、タイトルを画面の中央に、ボタンを右端に置く（ボタンが左右の列に収まる幅から） */
+@media (min-width: 1000px) {
   .header-inner {
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: start;
@@ -154,6 +155,11 @@ a {
   color: var(--text);
   border-color: var(--border);
   font-size: 1.2rem;
+}
+
+.lang-btn {
+  white-space: nowrap;
+  font-size: 15px;
 }
 
 .icon-btn:hover {
@@ -247,7 +253,7 @@ a {
 
 .subtitle {
   margin: 8px auto 0;
-  max-width: 720px;
+  max-width: 680px;
   color: var(--muted);
 }
 
