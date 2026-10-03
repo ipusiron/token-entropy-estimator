@@ -11,23 +11,27 @@ const { TokenSamples: SAMPLES, TokenSampleOrder: ORDER } = load('js/samples.js')
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const YEAR = TE.SECONDS_PER_YEAR;
 const fmtBits = (b) => (b >= 100 ? b.toFixed(1) : b.toFixed(2));
+const NL = String.fromCharCode(10);
+const GEN_IDS = ['hex', 'base32', 'base62', 'base64url', 'digits', 'printable'];
 
 const DOCS = {
   ja: {
     file: 'README.md', switcher: '[English](README.en.md) · 日本語', day: '**Day048 - 生成AIで作るセキュリティツール100**', images: /^assets\/screenshot\d*\.png$/,
     sec: { how: '🔬 見積もりの仕組み', time: '⏱️ 総当たりの時間', std: '📏 判定の基準', scan: '🔍 シークレット検出ツールから見えるか', tree: '📁 ディレクトリー構造',
-      about: '🛠️ このツールについて' },
-    heads: { charset: '文字の集合', format: '形式', samples: 'サンプル', scenario: '場面', std: '基準', rate: '長さ' },
+      about: '🛠️ このツールについて', batch: '📦 複数のトークンの一括分析', gen: '🔐 安全なトークンの作り方' },
+    heads: { charset: '文字の集合', format: '形式', samples: 'サンプル', scenario: '場面', std: '基準', rate: '長さ', example: '例' },
     verdict: { meets: '以上', below: '届かない', pattern: '構造あり', notApplicable: '対象外' },
+    batchVerdict: { none: '構造なし', structure: '構造あり' },
     claims: ['約584.5年', '約7553億年（宇宙の年齢の54.7倍）', '2022-02-22 19:22:22 UTC', '22字以下（log₂22≈4.46）', '`123456789`→`cbf43926`']
   },
   en: {
     file: 'README.en.md', switcher: 'English · [日本語](README.md)', day: '**Day048 - 100 Security Tools with Generative AI**',
     images: /^assets\/en\/screenshot\d*\.png$/,
     sec: { how: '🔬 How the estimate works', time: '⏱️ Brute-force time', std: '📏 Standards', scan: '🔍 Would secret scanners find it?',
-      tree: '📁 Directory structure', about: '🛠️ About this tool' },
-    heads: { charset: 'Character set', format: 'Format', samples: 'Sample', scenario: 'Scenario', std: 'Standard', rate: 'Length' },
+      tree: '📁 Directory structure', about: '🛠️ About this tool', batch: '📦 Batch analysis of many tokens', gen: '🔐 Making secure tokens' },
+    heads: { charset: 'Character set', format: 'Format', samples: 'Sample', scenario: 'Scenario', std: 'Standard', rate: 'Length', example: 'Example' },
     verdict: { meets: 'Meets', below: 'Short', pattern: 'Structure', notApplicable: 'Not applicable' },
+    batchVerdict: { none: 'No structure', structure: 'Structure' },
     claims: ['about 584.5 years', 'about 755 billion years on average (54.7 times the age of the universe)', '2022-02-22 19:22:22 UTC',
       '22 characters or less (log₂22≈4.46)', '(`123456789` → `cbf43926`)']
   }
@@ -190,6 +194,55 @@ for (const [lang, d] of Object.entries(DOCS)) {
     }
   });
 
+  test(`${d.file}: 一括分析の例の表は、決まった種で作った100個ずつの解析結果と一致する`, () => {
+    const sec = section(d.text, d.sec.batch);
+    const bytesFrom = (seed) => {
+      const next = TE.xorshift32(seed);
+      return (buf) => {
+        for (let i = 0; i < buf.length; i++) buf[i] = Math.floor(next() * 256);
+        return buf;
+      };
+    };
+    const rb1 = bytesFrom(1);
+    const rb7 = bytesFrom(7);
+    const start = Date.UTC(2026, 9, 4);
+    const sets = [
+      Array.from({ length: 100 }, () => TE.generate('base62', 32, rb1)),
+      Array.from({ length: 100 }, (_, i) => (0x5f3a10c0 + i).toString(16).padStart(32, '0')),
+      Array.from({ length: 100 }, (_, i) => TE.makeUuidV7(start + i * 3, rb7))
+    ];
+    const rows = table(sec, d.heads.example);
+    assert.equal(rows.length, sets.length);
+    rows.forEach(([, count, constant, increasing, sum, baseline, verdict], i) => {
+      const r = TE.batchAnalyze(sets[i].join(NL));
+      assert.deepEqual([count, constant, increasing, sum, baseline, verdict],
+        [String(r.count), String(r.constantPositions), `${Math.round(r.increasingShare * 100)}%`, r.sumMinEntropy.toFixed(1), r.baselineSum.toFixed(1),
+          d.batchVerdict[r.verdict]], String(i));
+    });
+    assert.equal(TE.baselineMinEntropy(100, 62).toFixed(2), '4.27');
+    assert.ok(sec.includes('4.27'));
+  });
+
+  test(`${d.file}: 必要な長さと剰余の偏りの表は、実装の値と一致する`, () => {
+    const sec = section(d.text, d.sec.gen);
+    assert.equal(TE.GEN_ALPHABETS.printable.length, 94);
+    const len = table(sec, d.heads.std);
+    assert.deepEqual(len.map((r) => parseInt(r[0], 10)), TE.STANDARDS.map((x) => x.bits));
+    len.forEach((r, i) => {
+      const want = GEN_IDS.map((id) => String(TE.requiredLength(TE.STANDARDS[i].bits, TE.GEN_ALPHABETS[id].length)));
+      assert.deepEqual(r.slice(1), want, r[0]);
+    });
+    const bias = table(sec, d.heads.charset);
+    assert.deepEqual(bias.map((r) => r[1]), GEN_IDS.map((id) => String(TE.GEN_ALPHABETS[id].length)));
+    for (const [, k, remainder, ratio, loss] of bias) {
+      const b = TE.moduloBias(Number(k));
+      assert.deepEqual([remainder, ratio, loss], [String(b.remainder), String(Math.round(b.ratio * 100) / 100), b.minEntropyLoss.toFixed(3)], k);
+    }
+    assert.equal(256 - (256 % 62), 248);
+    assert.equal((32 * TE.moduloBias(62).minEntropyLoss).toFixed(2), '8.84');
+    for (const c of ['248', '8.84']) assert.ok(sec.includes(c), c);
+  });
+
   test(`${d.file}: ディレクトリー構造にすべてのファイルとディレクトリーが載り、全行に説明がある`, () => {
     const block = section(d.text, d.sec.tree).match(/```\n([\s\S]*?)```/)[1];
     const lines = block.split('\n').filter((l) => l.trim()).slice(1);
@@ -209,21 +262,25 @@ for (const [lang, d] of Object.entries(DOCS)) {
   });
 }
 
-test('theory.md: 例の時間は 6.3e11 年（以前の 6.3e14 年ではない）、UUID は RFC 9562、基準の表は実装と同じ', () => {
-  const doc = read('theory.md');
-  assert.ok(doc.includes('6.3e11 年'));
-  assert.doesNotMatch(doc, /6\.3e14/);
-  assert.ok(doc.includes('RFC 9562'));
-  const years = 2 ** 94 / 1e9 / YEAR;
-  assert.equal(years.toExponential(1), '6.3e+11');
-  for (const s of TE.STANDARDS) assert.ok(doc.includes(`| ${s.bits} |`), String(s.bits));
-});
+for (const [file, years] of [['theory.md', '6.3e11 年'], ['theory.en.md', '6.3e11 years']]) {
+  test(`${file}: 例の時間は 6.3e11 年（以前の 6.3e14 年ではない）、UUID は RFC 9562、基準の表と剰余の偏りの値は実装と同じ`, () => {
+    const doc = read(file);
+    assert.ok(doc.includes(years));
+    assert.ok(!doc.includes('6.3e14'));
+    assert.ok(doc.includes('RFC 9562'));
+    assert.equal((2 ** 94 / 1e9 / YEAR).toExponential(1), '6.3e+11');
+    for (const s of TE.STANDARDS) assert.ok(doc.includes(`| ${s.bits} |`), String(s.bits));
+    assert.equal(TE.moduloBias(62).minEntropyLoss.toFixed(3), '0.276');
+    assert.equal(Math.log2(100).toFixed(2), '6.64');
+    for (const c of ['0.276', '8.84', '6.64', '248']) assert.ok(doc.includes(c), c);
+  });
+}
 
 test('画像: 参照はすべて実在し、日本語版は assets/、英語版は assets/en/ の画像を使う。参照していない PNG は置かない', () => {
   const refs = {};
   for (const [lang, d] of Object.entries(DOCS)) {
     refs[lang] = [...d.text.matchAll(/!\[[^\]]*\]\((assets\/[^)]+)\)/g)].map((m) => m[1]);
-    assert.equal(refs[lang].length, 4, lang);
+    assert.equal(refs[lang].length, 6, lang);
     for (const r of refs[lang]) {
       assert.ok(fs.existsSync(path.join(ROOT, r)), r);
       assert.match(r, d.images, r);

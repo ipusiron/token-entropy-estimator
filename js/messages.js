@@ -506,12 +506,12 @@
     'batch.bits': '{bits} bits',
     'w.batchFew': 'Fewer than {min} tokens. Skew by chance is hard to tell apart, so no judgment is made.',
     'w.batchOverLimit': 'Tokens beyond {max} are not analyzed.',
-    'w.batchDuplicates': '{count} tokens are duplicates. Truly random tokens almost never repeat.',
+    'w.batchDuplicates': 'Duplicate tokens: {count}. Truly random tokens almost never repeat.',
     'w.batchLengths': 'The lengths differ ({min}-{max} characters).',
-    'w.batchConstant': '{count} positions have the same character in every token (such as the leading "{prefix}"). Fixed parts are not random.',
-    'w.batchConstantInside': '{count} positions have the same character in every token. Fixed parts are not random.',
+    'w.batchConstant': 'Positions with the same character in every token: {count} (such as the leading "{prefix}"). Fixed parts are not random.',
+    'w.batchConstantInside': 'Positions with the same character in every token: {count}. Fixed parts are not random.',
     'w.batchIncreasing': 'Later tokens are larger ({share}% of pairs). They may contain a timestamp or a counter.',
-    'w.batchWeak': '{count} positions are skewed below half the guide for random strings of the same count.',
+    'w.batchWeak': 'Positions skewed below half the guide for random strings of the same count: {count}.',
 
     // ===== Result =====
     'verdict.none': 'Enter a token to see the result',

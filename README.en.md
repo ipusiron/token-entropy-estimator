@@ -40,6 +40,14 @@ You can try it directly in your browser.
 >
 >*The Base64 sample reads as "Aladdin:open sesame", so it is not judged because it has structure (dark mode)*
 
+>![Batch analysis of many tokens](assets/en/screenshot5.png)
+>
+>*100 counter tokens. All but the last few of the 32 positions have the same character in every token (red), and later tokens are larger. The sum of min-entropy by position falls far below the guide for random tokens of the same count*
+
+>![Make a secure token](assets/en/screenshot6.png)
+>
+>*The required length comes from the target bits and the character set, and the token is made by rejection sampling. For alphanumerics, it also shows that taking the remainder of one byte makes 8 characters 1.25 times as likely*
+
 ---
 
 ## ✨ Features
@@ -66,6 +74,18 @@ You can try it directly in your browser.
 - Times are written with large-number words (thousand, million, billion, trillion, then powers of 10), with a comparison to the age of the universe
 - The standard can be chosen from OWASP, NIST and RFCs (64, 112, 128, 160 and 256 bits), or entered as any number of bits
 - Shows the thresholds of detect-secrets and gitleaks next to the Shannon entropy per character, and whether the string would be found
+
+### 📦 Comparing many tokens
+
+- Paste tokens made the same way, one per line, to see the min-entropy of each position as bars next to the guide for random tokens of the same count
+- Reports positions with the same character in every token (such as a prefix), duplicates, an ever-increasing order (timestamps, counters) and positions below half the guide
+- Three samples (random, counter, UUID v7 3 ms apart; 100 each). Fewer than 20 tokens are not judged
+
+### 🔐 Making a secure token
+
+- Shows a table of the required length for each standard (64-256 bits) and character set (hexadecimal, Base32, alphanumeric, base64url, digits, printable ASCII)
+- Makes tokens without bias with `crypto.getRandomValues` and rejection sampling. You can copy the token, check it in the result, or send 100 to batch analysis
+- Shows, for the chosen character set, the bias of choosing characters by the remainder of one byte
 
 ### 🖥️ Screen
 
@@ -195,18 +215,82 @@ A string of length n can reach at most log₂(n) per character. Even truly rando
 
 ---
 
+## 📦 Batch analysis of many tokens
+
+A single string does not tell you how it was made, so tokens made the same way are lined up and compared position by position (the idea behind Burp Suite Sequencer). The min-entropy of a position is −log₂ p, where p is the share of its most common character.
+
+- The guide for random tokens is the average over 200 trials, with a seeded generator, of drawing the same count uniformly from the same character set. With n tokens a position cannot exceed log₂(n), so even for 100 alphanumeric tokens the guide is about 4.27 bits per position
+- The character set is chosen from the characters at positions that vary (fixed characters such as the hyphens in UUIDs do not widen it)
+- Positions with the same character in every token and duplicates are reported only when their expected number by chance, for that count and set size, is below 0.001 (three 32-character hexadecimal tokens often share some position by chance)
+- 95% or more of pairs larger than the previous one counts as "ever-increasing", and positions below half the guide count as "skewed". Fewer than 20 tokens are not judged
+
+Examples of 100 tokens each made with a seeded generator are as follows (the samples on the screen use new random values each time, so the values differ slightly).
+
+| Example | Tokens | Positions with the same character | Pairs larger than the previous | Sum of min-entropy | Guide for random | Judgment |
+|---|---|---|---|---|---|---|
+| Random (32 alphanumerics) | 100 | 0 | 49% | 138.6 | 136.7 | No structure |
+| Counter (32 hexadecimal) | 100 | 29 | 100% | 7.1 | 101.6 | Structure |
+| UUID v7 (3 ms apart) | 100 | 14 | 100% | 67.0 | 114.2 | Structure |
+
+- Finding no structure does not prove randomness. Tests for random number generators (such as NIST SP 800-90B) use far more samples
+
+---
+
+## 🔐 Making secure tokens
+
+The required length is the target bits / log₂(set size), rounded up to whole characters.
+
+| Standard | Hexadecimal | Base32 | Alphanumeric | base64url | Digits | Printable ASCII (94) |
+|---|---|---|---|---|---|---|
+| 64 bits | 16 | 13 | 11 | 11 | 20 | 10 |
+| 112 bits | 28 | 23 | 19 | 19 | 34 | 18 |
+| 128 bits | 32 | 26 | 22 | 22 | 39 | 20 |
+| 160 bits | 40 | 32 | 27 | 27 | 49 | 25 |
+| 256 bits | 64 | 52 | 43 | 43 | 78 | 40 |
+
+If a character is chosen by the remainder of one byte (0-255) divided by the set size k, and 256 is not divisible by k, the first (256 mod k) characters appear one extra time.
+
+| Character set | Set size | 256 mod set size | Ratio for favored characters | Min-entropy lost per character |
+|---|---|---|---|---|
+| Hexadecimal | 16 | 0 | 1 | 0.000 |
+| Base32 | 32 | 0 | 1 | 0.000 |
+| Alphanumeric | 62 | 8 | 1.25 | 0.276 |
+| base64url | 64 | 0 | 1 | 0.000 |
+| Digits | 10 | 6 | 1.04 | 0.022 |
+| Printable ASCII | 94 | 68 | 1.5 | 0.140 |
+
+- The tool discards the values that cause the bias (248 or more for alphanumerics) and draws again (rejection sampling). It uses `crypto.getRandomValues`, not `Math.random` (which is not cryptographic)
+- Choosing 32 alphanumeric characters by the remainder loses about 8.84 bits of min-entropy
+
+---
+
 ## 🎯 Use cases
 
 - Designing API keys and session IDs: decide the length from the target bits (128 bits means 32 hexadecimal or 22 alphanumeric characters). See that UUID v4 has 122 bits and v7 has 74 bits with a timestamp, and decide not to use v7 as a secret
-- Code review and audits: when reviewing how tokens are generated, paste samples to get a sense of whether the random part is large enough (check the generator itself in the code)
+- Code review and audits: when reviewing how tokens are generated, paste samples to get a sense of whether the random part is large enough (check the generator itself in the code). Collect 100 tokens made by the same mechanism and run batch analysis to check for counters or timestamps
 - Configuring secret scanning: confirm that the thresholds of detect-secrets and gitleaks miss short keys, and explain why pattern rules are needed too
 - Classes on information security and information theory: experience how bits, the number of combinations and brute-force time relate, through very large numbers such as powers of 10. The difference between the Shannon entropy of a string and the entropy of how it was made can be shown too
 - Probability and statistics classes: confirm with the OWASP 585-year example that more valid values mean one of them is hit sooner
 - CTFs and security exercises: get a sense of whether given tokens or session IDs are guessable (a UUID v1 with a timestamp, readable Base64 content, repeated characters)
+- Writing or teaching generators: show, with numbers, the bias of choosing characters by the remainder of one byte (8 alphanumerics become 1.25 times as likely) and how rejection sampling fixes it
 - Making puzzles and cipher games: estimate how long a passphrase or random string would hold out against brute force (noting that words people make up are tried first with dictionaries)
 - At home: check how many bits the default router or Wi-Fi password (alphanumerics made by a machine) has. Check passwords people make up with [Day001 Password Checker](https://ipusiron.github.io/password-checker/)
 - Articles and teaching material: produce the numbers for tables and figures, with sources for the attack speeds (the hashcat RTX 5090 benchmark) and the standards
 - With other tools: look inside JWTs with [Day053 JWT Inspector](https://ipusiron.github.io/jwt-inspector/), hexadecimal strings that look like hashes with [Day002 Hash Detector](https://ipusiron.github.io/hash-detector/), and keyboard runs with [Day089 Keywalk Analyzer](https://ipusiron.github.io/keywalk-analyzer/)
+
+---
+
+## 🔗 Related tools
+
+- [Day001 Password Checker](https://ipusiron.github.io/password-checker/): check the strength of passwords people make up, including dictionaries and rules
+- [Day002 Hash Detector](https://ipusiron.github.io/hash-detector/): tell which hash function a hexadecimal string comes from
+- [Day031 Git Secrets Playground](https://ipusiron.github.io/git-secrets-playground/): try how secrets committed to Git are found and removed
+- [Day052 BaseXX Visualizer](https://ipusiron.github.io/basexx-visualizer/): compare encodings such as Base32, Base58 and Base64
+- [Day053 JWT Inspector](https://ipusiron.github.io/jwt-inspector/): read and verify the header, payload and signature of a JWT
+- [Day073 InfoQuantity Academy](https://ipusiron.github.io/infoquantity-academy/): learn the idea of information quantity (bits) from the basics
+- [Day089 Keywalk Analyzer](https://ipusiron.github.io/keywalk-analyzer/): find passwords that rely on keyboard runs
+
+The links on the screen only open the pages; the token you entered is not passed on.
 
 ---
 
@@ -231,6 +315,7 @@ See [SECURITY.md](SECURITY.md) for details.
 - The attack speeds are values from public benchmarks and examples. Real speeds vary a lot with the hash settings, hardware and service limits
 - Brute force by quantum computers (Grover's search) is not considered. As a rough guide, the strength becomes that of half the bits
 - Formats of other companies' API keys (prefixes, checksums) are not read, except GitHub tokens. Prefix-like parts are only reported
+- Batch analysis is for finding structure. Finding none does not prove randomness, and with few tokens structure is easy to miss
 
 ---
 
@@ -246,6 +331,7 @@ npm test
 - Known answers are computed separately in Python (zlib, uuid, base64, math): the CRC-32 check value (`123456789` → `cbf43926`), the versions and times of the UUID examples in RFC 9562, and the header of the JWT example in RFC 7519
 - Choosing the character set, counting padding and code points, structure warnings (fewer than 0.5% of truly random strings reported, with a seeded random generator), readable Base64 and hexadecimal
 - Guesses until a hit (the OWASP 585-year example, the 755-billion-year example), time units, large-number words, secret scanner thresholds (exactly equal is not flagged)
+- Batch analysis (truly random tokens are not judged as structured; counters, UUID v7, positions that match by chance), required length, modulo bias, rejection sampling (feeding 0-255 once gives each of the 62 characters exactly 4 times), version and time of a generated UUID v7
 - CSP, labels and aria-live in index.html, color contrast (at least 4.5:1 in both light and dark modes), line length, the keys of both dictionaries, and no Japanese in the English screen
 - The tables and numbers in both READMEs are also recomputed from the implementation
 
@@ -263,14 +349,18 @@ token-entropy-estimator/
 │   │   ├── screenshot.png  # GitHub token
 │   │   ├── screenshot2.png # UUID v7
 │   │   ├── screenshot3.png # Time by scenario and secret scanners
-│   │   └── screenshot4.png # Readable Base64, dark
+│   │   ├── screenshot4.png # Readable Base64, dark
+│   │   ├── screenshot5.png # Batch analysis
+│   │   └── screenshot6.png # Make a secure token
 │   ├── favicon.svg         # Favicon
 │   ├── screenshot.png      # Screenshot for the Japanese README (GitHub token)
 │   ├── screenshot2.png     # Screenshot for the Japanese README (UUID v7)
 │   ├── screenshot3.png     # Screenshot for the Japanese README (time and secret scanners)
-│   └── screenshot4.png     # Screenshot for the Japanese README (readable Base64, dark)
+│   ├── screenshot4.png     # Screenshot for the Japanese README (readable Base64, dark)
+│   ├── screenshot5.png     # Screenshot for the Japanese README (batch analysis)
+│   └── screenshot6.png     # Screenshot for the Japanese README (make a secure token)
 ├── js/                     # Scripts other than the screen (plain scripts that work from file://)
-│   ├── entropy-core.js     # Calculation (character set, format, structure, secret scanners, time, standards)
+│   ├── entropy-core.js     # Calculation (character set, format, structure, scanners, time, standards, batch, generation)
 │   ├── i18n.js             # Choosing and switching the language (Japanese, English)
 │   ├── messages.js         # Strings shown on the screen (Japanese, English)
 │   ├── samples.js          # Samples
@@ -300,7 +390,8 @@ token-entropy-estimator/
 ├── package.json            # npm test settings (no dependencies)
 ├── script.js               # Screen logic (redraws everything from the state)
 ├── style.css               # Styles (light and dark)
-└── theory.md               # Theory notes on entropy and brute force (Japanese)
+├── theory.en.md            # Theory notes on entropy and brute force (English)
+└── theory.md               # Theory notes (Japanese)
 ```
 
 ---
