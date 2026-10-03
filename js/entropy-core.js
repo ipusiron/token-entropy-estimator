@@ -585,10 +585,166 @@
     return String(Math.round(v * 100) / 100);
   }
 
+  // ===== 複数のトークンの一括分析（同じ作り方のトークンを並べて、位置ごとに比べる） =====
+  const BATCH_MIN = 20; // これより少ないと、偶然の偏りと区別しにくい
+  const BATCH_MAX = 1000;
+  const BATCH_MAX_LENGTH = 200;
+  const BATCH_WEAK_RATIO = 0.5; // 同じ個数の乱数の半分に満たない位置を「偏りのある位置」とする
+  const BATCH_INCREASING = 0.95; // 前のものより大きい組の割合がこれ以上なら「増え続けている」
+
+  // 決まった種の乱数（比べるための乱数。暗号の用途には使わない）
+  function xorshift32(seed) {
+    let s = seed >>> 0 || 1;
+    return () => {
+      s ^= s << 13;
+      s >>>= 0;
+      s ^= s >>> 17;
+      s ^= s << 5;
+      s >>>= 0;
+      return s / 4294967296;
+    };
+  }
+
+  // n 個を k 種から一様に選んだとき、最も多い文字の割合から出す最小エントロピー（−log2 pmax）の平均。決まった種で rounds 回
+  const baselineCache = new Map();
+  function baselineMinEntropy(n, k, rounds = 200) {
+    const key = `${n}:${k}`;
+    if (baselineCache.has(key)) return baselineCache.get(key);
+    const next = xorshift32(20261004);
+    const counts = new Uint32Array(k);
+    let sum = 0;
+    for (let r = 0; r < rounds; r++) {
+      counts.fill(0);
+      let max = 0;
+      for (let i = 0; i < n; i++) {
+        const c = Math.floor(next() * k);
+        counts[c]++;
+        if (counts[c] > max) max = counts[c];
+      }
+      sum += -log2(max / n);
+    }
+    const v = sum / rounds;
+    baselineCache.set(key, v);
+    return v;
+  }
+
+  function batchAnalyze(text) {
+    const lines = String(text).split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    const tokens = lines.slice(0, BATCH_MAX).map((l) => codePoints(l).slice(0, BATCH_MAX_LENGTH));
+    const n = tokens.length;
+    const res = { count: n, overLimit: lines.length > BATCH_MAX, warnings: [], positions: [] };
+    if (!n) return res;
+    const strings = tokens.map((t) => t.join(''));
+    const lengths = tokens.map((t) => t.length);
+    res.minLength = Math.min(...lengths);
+    res.maxLength = Math.max(...lengths);
+    res.duplicates = n - new Set(strings).size;
+    res.alphabet = detectAlphabet(tokens.flat());
+    for (let i = 0; i < res.maxLength; i++) {
+      const counts = new Map();
+      let present = 0;
+      for (const t of tokens) {
+        if (i >= t.length) continue;
+        counts.set(t[i], (counts.get(t[i]) || 0) + 1);
+        present++;
+      }
+      let max = 0;
+      for (const c of counts.values()) max = Math.max(max, c);
+      res.positions.push({ index: i, distinct: counts.size, present, minEntropy: -log2(max / present), constant: counts.size === 1 && present === n });
+    }
+    let prefix = 0;
+    while (prefix < res.positions.length && res.positions[prefix].constant) prefix++;
+    res.prefixLength = prefix;
+    res.prefix = tokens[0].slice(0, prefix).join('');
+    res.constantPositions = res.positions.filter((p) => p.constant).length;
+    let up = 0;
+    for (let i = 1; i < n; i++) if (strings[i] > strings[i - 1]) up++;
+    res.increasingShare = n > 1 ? up / (n - 1) : 0;
+    res.sumMinEntropy = res.positions.reduce((a, p) => a + p.minEntropy, 0);
+    res.capPerPosition = log2(n);
+    const k = res.alphabet.size;
+    if (k) {
+      res.baselinePerPosition = baselineMinEntropy(n, k);
+      res.baselineSum = res.baselinePerPosition * res.maxLength;
+      res.singleBits = res.maxLength * log2(k);
+      res.weakPositions = res.positions.filter((p) => p.minEntropy < BATCH_WEAK_RATIO * res.baselinePerPosition).length;
+    }
+    if (n < BATCH_MIN) res.warnings.push({ id: 'batchFew', min: BATCH_MIN });
+    if (res.overLimit) res.warnings.push({ id: 'batchOverLimit', max: BATCH_MAX });
+    if (res.duplicates) res.warnings.push({ id: 'batchDuplicates', count: res.duplicates });
+    if (res.minLength !== res.maxLength) res.warnings.push({ id: 'batchLengths', min: res.minLength, max: res.maxLength });
+    if (n >= 2 && res.constantPositions) res.warnings.push({ id: 'batchConstant', count: res.constantPositions, prefix: res.prefix });
+    if (n >= BATCH_MIN && res.increasingShare >= BATCH_INCREASING) res.warnings.push({ id: 'batchIncreasing', share: res.increasingShare });
+    if (n >= BATCH_MIN && res.weakPositions) res.warnings.push({ id: 'batchWeak', count: res.weakPositions });
+    if (!k) res.warnings.push({ id: 'nonAscii' });
+    // 構造が見つかったか（個数が足りないときは判定しない）
+    const found = res.warnings.some((w) => ['batchDuplicates', 'batchConstant', 'batchIncreasing', 'batchWeak'].includes(w.id));
+    res.verdict = found ? 'structure' : n < BATCH_MIN ? 'few' : 'none';
+    return res;
+  }
+
+  // ===== 安全なトークンの作り方 =====
+  const PRINTABLE = Array.from({ length: 94 }, (_, i) => String.fromCharCode(33 + i)).join(''); // 空白を除く印字できる ASCII
+  const GEN_ALPHABETS = {
+    hex: '0123456789abcdef',
+    base32: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
+    base62: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+    base64url: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',
+    digits: '0123456789',
+    printable: PRINTABLE
+  };
+
+  // 目標のビット数に必要な文字数
+  function requiredLength(bits, k) {
+    return Math.ceil(bits / log2(k) - 1e-9);
+  }
+
+  // 1バイト（0〜255）を k で割った余りで文字を選ぶときの偏り。余り r の文字だけ1回多く出る
+  function moduloBias(k) {
+    const r = 256 % k;
+    if (!r) return { remainder: 0, ratio: 1, minEntropyLoss: 0 };
+    const hi = Math.ceil(256 / k);
+    const lo = Math.floor(256 / k);
+    return { remainder: r, ratio: hi / lo, pHigh: hi / 256, pLow: lo / 256, minEntropyLoss: log2(k) + log2(hi / 256) };
+  }
+
+  // 乱数のバイト列（randomBytes(Uint8Array) で埋める関数）から、棄却法で偏りなく文字を選ぶ
+  function generate(alphabetId, length, randomBytes) {
+    const a = GEN_ALPHABETS[alphabetId];
+    if (!a || !Number.isInteger(length) || length < 1 || length > 1024) return null;
+    const k = a.length;
+    const limit = 256 - (256 % k);
+    const out = [];
+    const buf = new Uint8Array(Math.max(16, length * 2));
+    while (out.length < length) {
+      randomBytes(buf);
+      for (const b of buf) {
+        if (b >= limit) continue;
+        out.push(a[b % k]);
+        if (out.length === length) break;
+      }
+    }
+    return out.join('');
+  }
+
+  // UUID v7（RFC 9562）: 48ビットのミリ秒の時刻＋版7＋12ビットの乱数＋変種10＋62ビットの乱数
+  function makeUuidV7(ms, randomBytes) {
+    const r = new Uint8Array(10);
+    randomBytes(r);
+    const hex = (b) => b.toString(16).padStart(2, '0');
+    const time = Math.floor(ms).toString(16).padStart(12, '0').slice(-12);
+    const randA = ((r[0] & 0x0f) << 8) | r[1];
+    const b = [...r.slice(2)];
+    b[0] = (b[0] & 0x3f) | 0x80;
+    const tail = b.map(hex).join('');
+    return `${time.slice(0, 8)}-${time.slice(8, 12)}-7${randA.toString(16).padStart(3, '0')}-${tail.slice(0, 4)}-${tail.slice(4, 16)}`;
+  }
+
   root.TokenEntropy = {
     MAX_INPUT, ALPHABETS, OVERRIDES, STANDARDS, DEFAULT_STANDARD, SCENARIOS, SCANNERS, PATTERN_WARNINGS, SECONDS_PER_YEAR, UNIVERSE_YEARS,
     LOW_VARIETY_RATIO, codePoints, shannon, base64Bytes, hexBytes, utf8, readableText, crc32, base62, uuidInfo, jwtInfo, githubInfo,
     detectAlphabet, structureWarnings, scanners, analyze, verdict, standardBits, parseThreshold, parseCount, parseRate, guesses, timeTable,
-    durationParts, scaleNumber, roundForDisplay
+    durationParts, scaleNumber, roundForDisplay, BATCH_MIN, BATCH_MAX, BATCH_MAX_LENGTH, BATCH_WEAK_RATIO, BATCH_INCREASING, xorshift32,
+    baselineMinEntropy, batchAnalyze, GEN_ALPHABETS, requiredLength, moduloBias, generate, makeUuidV7
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -319,9 +319,11 @@ token-entropy-estimator/
 │   ├── theme-init.js       # 読み込みの最初にテーマを当てる
 │   └── theme.js            # ライト／ダークの切り替え
 ├── test/                   # テスト（node:test）
+│   ├── batch.test.js       # 複数のトークンの一括分析
 │   ├── contrast.test.js    # 配色のコントラスト・入力欄と操作の大きさ
 │   ├── core.test.js        # 文字の集合・形式・構造の警告・入力の検証
 │   ├── format.test.js      # 行の長さ・改行コード・行数の下限
+│   ├── generate.test.js    # 必要な長さ・剰余の偏り・棄却法での生成
 │   ├── html.test.js        # CSP・要素のid・ラベル・aria-live・ヘルプ
 │   ├── i18n.test.js        # 日英の辞書のキー・英語に日本語がないこと・初期の言語
 │   ├── load.js             # js/のスクリプトをテストに読み込む

@@ -277,9 +277,11 @@ token-entropy-estimator/
 │   ├── theme-init.js       # Applies the theme at the start of loading
 │   └── theme.js            # Light/dark switching
 ├── test/                   # Tests (node:test)
+│   ├── batch.test.js       # Batch analysis of many tokens
 │   ├── contrast.test.js    # Color contrast, sizes of fields and controls
 │   ├── core.test.js        # Character set, format, structure warnings, input validation
 │   ├── format.test.js      # Line length, line endings, minimum line counts
+│   ├── generate.test.js    # Required length, modulo bias, generation by rejection sampling
 │   ├── html.test.js        # CSP, element ids, labels, aria-live, help
 │   ├── i18n.test.js        # Keys of both languages, no Japanese in English, initial language
 │   ├── load.js             # Loads the scripts in js/ into the tests
