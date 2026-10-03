@@ -1,370 +1,286 @@
-// ===== Helpers =====
-const $ = (id) => document.getElementById(id);
+// Token Entropy Estimator の画面（DOM だけを扱う）。計算は js/entropy-core.js、文言は js/messages.js
+// 画面に入れる文字列はすべて textContent で入れる（HTML として解釈しない）
+(function () {
+  'use strict';
 
-// HTML escape function for security
-function escapeHtml(unsafe) {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
+  const TE = globalThis.TokenEntropy;
+  const { t, getLanguage } = globalThis.TokenMessages;
+  const $ = (id) => document.getElementById(id);
+  const GAUGE_MAX = 256;
+  const MAX_VALID = 1e16;
+  const MAX_GPUS = 1e6;
 
-function log2(x){ return Math.log(x)/Math.log(2); }
+  // 画面の状態。入力・前提を変えたら、ここを書き換えて render() で全体を描き直す
+  const state = {
+    token: '', charset: 'auto', customSize: '100', standard: TE.DEFAULT_STANDARD, customBits: '96', valid: '1', gpus: '1', customRate: ''
+  };
 
-function formatBigIntApprox(num){
-  // num may be a BigInt or Number
-  try{
-    const s = num.toString();
-    if (s.length <= 6) return s;
-    // scientific-ish
-    return s.slice(0,3) + "…" + ` ×10^${s.length-1}`;
-  }catch{
-    // Number fallback
-    const n = Number(num);
-    if (!isFinite(n)) return "∞";
-    if (n === 0) return "0";
-    const exp = Math.floor(Math.log10(n));
-    const m = n / Math.pow(10,exp);
-    return `${m.toFixed(2)} ×10^${exp}`;
+  function el(tag, props = {}, children = []) {
+    const node = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === 'text') node.textContent = v;
+      else if (k === 'className') node.className = v;
+      else node.setAttribute(k, v);
+    }
+    for (const c of children) node.append(c);
+    return node;
   }
-}
 
-function formatDuration(seconds){
-  if (!isFinite(seconds)) return "∞";
-  if (seconds < 1e-6) return `${(seconds*1e9).toFixed(2)} ns`;
-  if (seconds < 1e-3) return `${(seconds*1e6).toFixed(2)} µs`;
-  if (seconds < 1) return `${(seconds*1e3).toFixed(2)} ms`;
-  const units = [
-    ["year", 365*24*3600],
-    ["day", 24*3600],
-    ["hour", 3600],
-    ["min", 60],
-    ["sec", 1],
-  ];
-  let rem = Math.floor(seconds);
-  const parts = [];
-  for (const [label, size] of units){
-    if (rem >= size){
-      const v = Math.floor(rem/size);
-      parts.push(`${v} ${label}${v>1?"s":""}`);
-      rem = rem % size;
-      if (parts.length >= 2) break; // keep concise
+  function fmtBits(bits) {
+    return bits >= 100 ? bits.toFixed(1) : bits.toFixed(2);
+  }
+
+  // 10 の指数を上付きの数字で書く（10²⁵）
+  const SUPERSCRIPT = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+  const superscript = (n) => String(n).replace(/[0-9]/g, (d) => SUPERSCRIPT[Number(d)]).replace('-', '⁻');
+
+  // 大きな数を、言語の区切り（日本語は万・億・兆・京、英語は thousand…trillion）で書く。区切りを超えたら 10 の指数
+  function bigNumber(log10Value, keyPlain, keyExp, extra = {}) {
+    const s = TE.scaleNumber(log10Value, getLanguage());
+    if (s.exp !== undefined) return t(keyExp, { ...extra, m: TE.roundForDisplay(s.mantissa), e: superscript(s.exp) });
+    const scale = s.scale ? t(`scale.${s.scale}`) : '';
+    return t(keyPlain, { ...extra, n: TE.roundForDisplay(s.value), scale });
+  }
+
+  // 宇宙の年齢との比は、1倍以上1億倍未満のときだけ添える（それより大きいと比べても実感がない）
+  const UNIVERSE_MAX_LOG10 = 8;
+
+  function duration(log10Seconds) {
+    const p = TE.durationParts(log10Seconds);
+    if (p.unit === 'underSecond') return t('dur.underSecond');
+    if (p.unit !== 'years') return t(`dur.${p.unit}`, { n: TE.roundForDisplay(p.value) });
+    let text = p.log10 < 0 ? t('dur.years', { n: TE.roundForDisplay(10 ** p.log10), scale: '' }) : bigNumber(p.log10, 'dur.years', 'dur.yearsExp');
+    if (p.universe >= 0 && p.universe < UNIVERSE_MAX_LOG10) {
+      text = t('dur.withUniverse', { time: text, universe: bigNumber(p.universe, 'dur.universe', 'dur.universe') });
+    }
+    return text;
+  }
+
+  function rateText(rate) {
+    if (rate < 1) return t('rate.perHour', { n: TE.roundForDisplay(rate * 3600) });
+    return bigNumber(Math.log10(rate), 'rate.perSecond', 'rate.perSecondExp');
+  }
+
+  // 入力欄の値を検証する。正しくなければ欄の下に知らせ、null を返す
+  function checked(value, parse, errorId, errorKey) {
+    const v = parse(value);
+    const ok = !Number.isNaN(v);
+    $(errorId).textContent = ok ? '' : t(errorKey);
+    return ok ? v : null;
+  }
+
+  function settings() {
+    const custom = state.standard === 'custom';
+    $('customBitsField').hidden = !custom;
+    $('customSizeField').hidden = state.charset !== 'custom';
+    const threshold = custom ? checked(state.customBits, TE.parseThreshold, 'customBitsError', 'err.customBits') : TE.standardBits(state.standard);
+    if (!custom) $('customBitsError').textContent = '';
+    const valid = checked(state.valid, (v) => TE.parseCount(v, MAX_VALID), 'validError', 'err.valid');
+    const gpus = checked(state.gpus, (v) => TE.parseCount(v, MAX_GPUS), 'gpusError', 'err.gpus');
+    let customRate = null;
+    if (state.customRate.trim()) customRate = checked(state.customRate, TE.parseRate, 'customRateError', 'err.customRate');
+    else $('customRateError').textContent = '';
+    return { threshold, valid, gpus, customRate };
+  }
+
+  function formatName(r) {
+    if (r.format === 'uuid') {
+      const d = r.details;
+      if (d.kind === 'nil') return t('format.uuidNil');
+      if (d.kind === 'max') return t('format.uuidMax');
+      if (d.kind === 'uuidOther') return t('format.uuidOther');
+      return t('format.uuid', { v: d.version });
+    }
+    if (r.format === 'jwt') return t('format.jwt', { alg: r.details.alg });
+    if (r.format === 'github') return t('format.github', { prefix: r.details.prefix });
+    return t(`format.${r.format}`);
+  }
+
+  function alphabetName(a) {
+    if (!a || !a.size) return '—';
+    if (a.id === 'custom') return t('cs.custom', { n: a.size });
+    if (a.id === 'classes') return t('cs.classes', { list: a.classes.map((c) => t(`cls.${c}`)).join(t('cs.join')), n: a.size });
+    return t(`cs.${a.id}`);
+  }
+
+  // 形式の説明（UUID の版・JWT・GitHub）
+  function formatNotes(r) {
+    if (r.format === 'jwt') return [t('fmt.jwt')];
+    if (r.format === 'github') return [t('fmt.github') + (r.details.checksumOk ? t('fmt.githubOk') : '')];
+    if (r.format !== 'uuid') return [];
+    const d = r.details;
+    if (d.kind === 'nil' || d.kind === 'max') return [t('fmt.uuidSpecial')];
+    if (d.kind === 'uuidOther') return [t('fmt.uuidOther')];
+    const byVersion = {
+      4: 'fmt.uuid4', 7: 'fmt.uuid7', 1: 'fmt.uuidTime', 2: 'fmt.uuidTime', 6: 'fmt.uuidTime', 3: 'fmt.uuidName', 5: 'fmt.uuidName', 8: 'fmt.uuid8'
+    };
+    return [t(byVersion[d.version] || 'fmt.uuidOtherVersion')];
+  }
+
+  function warningText(w) {
+    switch (w.id) {
+      case 'truncated': return t('w.truncated', { max: TE.MAX_INPUT.toLocaleString('en-US') });
+      case 'uuidTime': return t('w.uuidTime', { time: w.time.replace('T', ' ').replace('.000Z', '') });
+      case 'decodedText': return t('w.decodedText', { bytes: w.bytes, preview: w.preview });
+      case 'hashLength': return t('w.hashLength', { bits: w.bits, names: t(`hash.${w.bits}`) });
+      case 'prefix': return t('w.prefix', { prefix: w.prefix, bits: fmtBits(w.bitsWithout) });
+      case 'repeated': return t('w.repeated', { period: w.period });
+      case 'sequence': case 'keyboard': return t(`w.${w.id}`, { run: w.run });
+      default: return t(`w.${w.id}`);
     }
   }
-  return parts.length ? parts.join(" ") : "0 sec";
-}
 
-function parseRate(value){
-  // Get value from select element
-  const v = Number(value);
-  // Validate the value
-  if (isFinite(v) && v > 0 && v <= 1e15) {
-    return v;
-  }
-  return 1e9; // Default fallback
-}
-
-function formatRate(rate){
-  // Format rate for display
-  if (rate >= 1e15) return "1000兆回/秒";
-  if (rate >= 1e12) return "1兆回/秒";
-  if (rate >= 1e9) return "10億回/秒";
-  if (rate >= 1e6) return "100万回/秒";
-  return `${rate} 回/秒`;
-}
-
-function parseThresholds(s){
-  // Sanitize and validate thresholds
-  const sanitized = String(s).slice(0, 50); // Limit input length
-  const parts = sanitized.split(",").map(x=>Number(x.trim())).filter(x=>!isNaN(x) && x >= 0 && x <= 1000);
-  const [weak=64, ok=80, strong=100] = parts;
-  // Ensure logical progression
-  const validWeak = Math.min(weak, 500);
-  const validOk = Math.max(validWeak, Math.min(ok, 500));
-  const validStrong = Math.max(validOk, Math.min(strong, 500));
-  return {weak: validWeak, ok: validOk, strong: validStrong};
-}
-
-// ===== Alphabet detection =====
-const ASCII_SYMBOLS = ` !"#$%&'()*+,-./:;<=>?@[\\]^_\`{|}~`; // space included
-
-function detectFormat(token){
-  // UUID v4: 8-4-4-4-12 hex, version=4, variant in [8,9,a,b,A,B]
-  const uuidRe = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
-  if (uuidRe.test(token)) return "UUIDv4";
-
-  // Hex-only?
-  const hexRe = /^[0-9a-fA-F]+$/;
-  if (hexRe.test(token)) return "Hex";
-
-  // Base64-ish? Allow A-Z a-z 0-9 + / with optional = padding at end
-  const b64Re = /^(?:[A-Za-z0-9+/]{2,}={0,2})$/;
-  if (b64Re.test(token)) return "Base64-ish";
-
-  return "Generic";
-}
-
-function detectAlphabetSet(token){
-  // detect used classes
-  let size = 0;
-  let labelParts = [];
-
-  const hasLower = /[a-z]/.test(token);
-  const hasUpper = /[A-Z]/.test(token);
-  const hasDigit = /[0-9]/.test(token);
-  const hasSpace = /[ ]/.test(token);
-  const hasSymbol = /[ !"#$%&'()*+,\-./:;<=>?@\[\\\]^_`{|}~]/.test(token.replace(/[ ]/g,"")); // exclude space counted separately
-
-  // special formats override
-  const fmt = detectFormat(token);
-  if (fmt === "UUIDv4"){
-    // UUIDはダッシュを含む固定形。エントロピーは実際にはハイフン除いた122bit相当（version/variantで減少）
-    // ここは教育上、hex 32桁相当から減算する単純近似を採用。
-    return { format: fmt, label: "UUIDv4 (hex+hyphen)", size: 16, hyphen: true };
-  }
-  if (fmt === "Hex"){
-    return { format: fmt, label: "Hex (0-9,a-f)", size: 16, hyphen: false };
-  }
-  if (fmt === "Base64-ish"){
-    // 64種。ただし '=' はパディングとして計数しない想定
-    return { format: fmt, label: "Base64-ish (A-Za-z0-9+/)", size: 64, hyphen: false };
+  // 人が考えた文字列らしいか（記号を含む文字の組み合わせ、または32字以下の文字の組み合わせ）
+  function looksHuman(r) {
+    return r.alphabet && r.alphabet.id === 'classes' && (r.alphabet.classes.includes('symbols') || r.length <= 32);
   }
 
-  // Generic: compose set
-  if (hasLower){ size += 26; labelParts.push("a-z"); }
-  if (hasUpper){ size += 26; labelParts.push("A-Z"); }
-  if (hasDigit){ size += 10; labelParts.push("0-9"); }
-  if (hasSymbol){
-    // count distinct ASCII symbols present? → 教育用に「使用可能性」を前提に全記号33種とする
-    size += ASCII_SYMBOLS.length - 1; // minus the space already separate (we'll add space if present)
-    labelParts.push("symbols");
-  }
-  if (hasSpace){ size += 1; labelParts.push("space"); }
-
-  // 何も当たらない（空など）
-  if (size === 0){
-    return { format: "Generic", label: "N/A", size: 0, hyphen: false };
-  }
-  return { format: "Generic", label: labelParts.join(" + "), size, hyphen: false };
-}
-
-// Shannon entropy (empirical) for reference
-function shannonEntropyBits(str){
-  if (!str || str.length === 0) return 0;
-  const freq = new Map();
-  for (const ch of str){ freq.set(ch, (freq.get(ch)||0)+1); }
-  const n = str.length;
-  let h = 0;
-  for (const [_, c] of freq){
-    const p = c / n;
-    h += -p * log2(p);
-  }
-  return h * n; // total bits for the string
-}
-
-// exponentiation safely with BigInt when possible
-function powBig(base, exp){
-  // base, exp are integers (we'll round base)
-  const b = BigInt(Math.max(0, Math.floor(base)));
-  const e = BigInt(Math.max(0, Math.floor(exp)));
-  if (b === 0n) return 0n;
-  let result = 1n, a = b, k = e;
-  while (k > 0n){
-    if (k & 1n) result *= a;
-    a *= a;
-    k >>= 1n;
-  }
-  return result;
-}
-
-// ===== Main calculation =====
-function analyze(){
-  // Input validation and sanitization
-  const tokenInput = $("token").value;
-  // Limit token length to prevent performance issues
-  const token = tokenInput.slice(0, 10000);
-  
-  const rate = parseRate($("rate").value);
-  const {weak, ok, strong} = parseThresholds($("thresholds").value);
-
-  // Reset
-  setText("len","-");
-  setText("alphabetLabel","-");
-  setText("alphabetSize","-");
-  setText("entropyBits","-");
-  setText("empiricalEntropy","-");
-  setText("space","-");
-  setText("time","-");
-  setText("rateEcho","-");
-  setText("rating","-");
-  $("rating").className = "badge";
-  setText("notes","-");
-  setBar(0);
-
-  if (!token){
-    setText("notes","入力が空です");
-    return;
+  function renderNotes(r) {
+    const items = [...formatNotes(r), ...r.warnings.map(warningText)];
+    if (looksHuman(r) && r.basis !== 'pattern') items.push(t('w.human'));
+    $('notes').replaceChildren(...items.map((s) => el('li', { text: s })));
   }
 
-  const n = token.length;
-  setText("len", String(n));
-  const d = detectAlphabetSet(token);
+  function renderGauge(bits, threshold) {
+    const fill = $('gaugeFill');
+    const mark = $('gaugeMark');
+    fill.style.width = `${bits === null ? 0 : (Math.min(bits, GAUGE_MAX) / GAUGE_MAX) * 100}%`;
+    mark.hidden = threshold === null;
+    if (threshold !== null) mark.style.left = `${(Math.min(threshold, GAUGE_MAX) / GAUGE_MAX) * 100}%`;
+  }
 
-  // UUIDv4補正：UUIDのハイフン4文字を除去し、version/variantで2+3=5固定bits
-  // 実効は 32 hex chars → 128bits - 固定5bits = ~123bits 相当
-  // 教育簡略化として 122〜123bits 目安表示
-  let Hbits;
-  let note = d.format;
-  if (d.format === "UUIDv4"){
-    setText("alphabetLabel", d.label);
-    setText("alphabetSize", "16 (hex)");
-    // 実測表示（簡易）
-    Hbits = 122; // 代表値として固定表示
-    setText("entropyBits", "~122.0 bits（近似）");
-    setText("empiricalEntropy", shannonEntropyBits(token).toFixed(2) + " bits（参考）");
-
-    // 総当たり空間を 2^122 とみなす
-    const spaceStr = "≈ 2^122";
-    setText("space", spaceStr);
-
-    // 中央値時間
-    const seconds = Math.pow(2,122) / 2 / rate;
-    setText("time", formatDuration(seconds));
-    setText("rateEcho", formatRate(rate));
-  } else {
-    setText("alphabetLabel", d.label);
-    setText("alphabetSize", d.size ? String(d.size) : "-");
-
-    if (d.size === 0 || n === 0){
-      setText("notes","評価不能（サイズ0 or 長さ0）");
+  function renderTime(r, s) {
+    const body = $('timeTable').querySelector('tbody');
+    if (r.bits === null || s.valid === null || s.gpus === null) {
+      body.replaceChildren();
       return;
     }
+    const rows = TE.timeTable(r.bits, { valid: s.valid, gpus: s.gpus, customRate: s.customRate });
+    body.replaceChildren(...rows.map((row) => {
+      const gpu = (TE.SCENARIOS.find((x) => x.id === row.id) || {}).gpu;
+      const name = t(`sc.${row.id}`) + (gpu && s.gpus > 1 ? t('sc.gpus', { n: s.gpus.toLocaleString('en-US') }) : '');
+      return el('tr', {}, [
+        el('th', { scope: 'row', text: name }), el('td', { 'data-label': t('ui.colRate'), text: rateText(row.rate) }),
+        el('td', { 'data-label': t('ui.colAvg'), text: duration(row.avg) }), el('td', { 'data-label': t('ui.colWorst'), text: duration(row.worst) })
+      ]);
+    }));
+  }
 
-    Hbits = n * log2(d.size);
-    setText("entropyBits", Hbits.toFixed(2) + " bits");
-
-    const Hemp = shannonEntropyBits(token);
-    setText("empiricalEntropy", Hemp.toFixed(2) + " bits（参考）");
-
-    // space = |Σ|^n
-    let spaceStr = "";
-    if (d.size <= 1 || n > 2048){
-      spaceStr = "very large";
-    } else {
-      try{
-        const space = powBig(d.size, n);
-        spaceStr = formatBigIntApprox(space);
-      }catch{
-        // fallback to Number
-        const spaceNum = Math.pow(d.size, n);
-        spaceStr = formatBigIntApprox(spaceNum);
-      }
+  function renderScanners(r) {
+    const body = $('scanTable').querySelector('tbody');
+    if (r.empty) {
+      body.replaceChildren();
+      return;
     }
-    setText("space", spaceStr);
-
-    const seconds = Math.pow(2, Hbits) / 2 / rate;
-    setText("time", formatDuration(seconds));
-    setText("rateEcho", formatRate(rate));
+    body.replaceChildren(...['detectSecretsBase64', 'detectSecretsHex', 'gitleaks'].map((id) => {
+      const s = r.scanners[id];
+      const value = s.applies ? s.entropy.toFixed(3) : '—';
+      const hit = s.applies ? t(s.hit ? 'scan.hit' : 'scan.miss') : t('scan.na');
+      return el('tr', { class: s.applies && s.hit ? 'hit' : '' }, [
+        el('th', { scope: 'row', text: t(`scan.${id}`) }), el('td', { 'data-label': t('ui.colLimit'), text: String(TE.SCANNERS[id]) }),
+        el('td', { 'data-label': t('ui.colValue'), text: value }), el('td', { 'data-label': t('ui.colHit'), text: hit })
+      ]);
+    }));
   }
 
-  // rating with emoji
-  let cls="badge", label="—", emoji="";
-  if (Hbits < weak){ 
-    cls+=" weak"; 
-    label="🔴 弱い"; 
-    emoji = "⚠️";
+  function render() {
+    const s = settings();
+    const r = TE.analyze(state.token, { override: state.charset, customSize: Number(state.customSize) });
+    const v = s.threshold === null && r.basis === 'bits' ? 'noThreshold' : TE.verdict(r, s.threshold);
+    const verdict = $('verdict');
+    verdict.textContent = t(`verdict.${v}`, { std: s.threshold });
+    verdict.className = `verdict verdict-${v}`;
+    $('bits').textContent = r.bits === null ? t('bits.none') : t('bits.value', { bits: fmtBits(r.bits) });
+    $('bitsKind').textContent = r.bits === null ? '' : t(r.bitsKind === 'spec' ? 'bits.spec' : 'bits.uniform');
+    $('format').textContent = r.empty ? '—' : formatName(r);
+    $('alphabet').textContent = alphabetName(r.alphabet);
+    $('counted').textContent = r.counted ? t('counted.value', { counted: r.counted, length: r.length }) : '—';
+    // 1文字あたりは、文字の集合で数えたときだけ（UUID は形式の決まりで数えるので、文字で割っても意味がない）
+    const perChar = r.bits && r.counted && (r.bitsKind === 'uniform' || r.format === 'github');
+    $('perChar').textContent = perChar ? t('perChar.value', { bits: (r.bits / r.counted).toFixed(3) }) : '—';
+    $('shannon').textContent = r.empty ? '—' : t('shannon.value', { v: r.shannon.perChar.toFixed(3), max: r.shannon.maxPerChar.toFixed(3) });
+    renderGauge(r.bits, s.threshold);
+    renderNotes(r);
+    renderTime(r, s);
+    renderScanners(r);
   }
-  else if (Hbits < strong){ 
-    cls+=" ok"; 
-    label="🟡 普通"; 
-    emoji = "✓";
+
+  function bind() {
+    const token = $('token');
+    // IME の変換中は描き直さない（変換が終わったときに描き直す）
+    token.addEventListener('input', (e) => {
+      if (e.isComposing) return;
+      state.token = token.value;
+      render();
+    });
+    token.addEventListener('compositionend', () => {
+      state.token = token.value;
+      render();
+    });
+    $('btnClear').addEventListener('click', () => {
+      token.value = '';
+      state.token = '';
+      render();
+      token.focus();
+    });
+    for (const btn of document.querySelectorAll('.sample-btn')) {
+      btn.addEventListener('click', () => {
+        const v = globalThis.TokenSamples[btn.dataset.sample];
+        if (typeof v !== 'string') return;
+        token.value = v;
+        state.token = v;
+        render();
+      });
+    }
+    for (const id of ['charset', 'customSize', 'standard', 'customBits', 'valid', 'gpus', 'customRate']) {
+      $(id).addEventListener(id === 'charset' || id === 'standard' ? 'change' : 'input', () => {
+        state[id] = $(id).value;
+        render();
+      });
+    }
   }
-  else { 
-    cls+=" strong"; 
-    label="🟢 強い"; 
-    emoji = "✅";
+
+  // ヘルプ（dialog）。? ボタンの話題だけを見せ、閉じたら押したボタンへフォーカスを戻す
+  function initHelp() {
+    const dialog = $('helpDialog');
+    let opener = null;
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.help-icon');
+      if (!btn) return;
+      for (const topic of dialog.querySelectorAll('.help-topic')) topic.hidden = topic.dataset.helpTopic !== btn.dataset.help;
+      $('helpTitle').textContent = btn.getAttribute('aria-label');
+      opener = btn;
+      dialog.showModal();
+      $('helpClose').focus();
+    });
+    $('helpClose').addEventListener('click', () => dialog.close());
+    // 背景（dialog の外側）を押したら閉じる
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    dialog.addEventListener('close', () => {
+      if (opener) opener.focus();
+    });
   }
-  $("rating").className = cls;
-  setText("rating", label);
 
-  // bar (map bits to 0..100 based on thresholds)
-  const pct = mapToBar(Hbits, weak, ok, strong);
-  setBar(pct);
-
-  // notes
-  if (note === "Generic") note = "—";
-  if (d.format === "Base64-ish"){
-    note += "（パディング'='はアルファベットに含めず近似）";
+  // 言語の切り替え: 静的な文言を差し替え、入力と前提はそのままで結果を描き直す
+  function initLanguage() {
+    const I18N = globalThis.TokenI18n;
+    const nav = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+    I18N.use(I18N.initialLanguage(location.search, I18N.readSaved(), nav), document);
+    $('btnLang').addEventListener('click', () => {
+      const next = getLanguage() === 'ja' ? 'en' : 'ja';
+      I18N.use(next, document);
+      I18N.save(next);
+      globalThis.TokenTheme.refresh($('btnTheme'), t);
+      render();
+    });
   }
-  setText("notes", note);
-}
 
-function mapToBar(bits, w, o, s){
-  // 0% at 0 bits, 100% at s+40bits
-  const max = s + 40;
-  const pct = Math.max(0, Math.min(100, (bits / max) * 100));
-  return pct;
-}
-
-function setText(id, text){
-  // Use textContent for safety (no HTML injection)
-  const element = $(id);
-  if (element) {
-    element.textContent = text;
-  }
-}
-
-function setBar(pct){
-  $("strengthBar").style.width = `${pct.toFixed(1)}%`;
-}
-
-// ===== Samples & UI =====
-function fillSample(type){
-  // Whitelist approach for sample types
-  const samples = {
-    "uuidv4": "550e8400-e29b-41d4-a716-446655440000",
-    "hex32": "3f1a0b2c9d7e4a1f0c5b6d8e2a7c9b1d",
-    "b64": "QWxhZGRpbjpvcGVuIHNlc2FtZQ==",
-    "alnum16": "A7kLw39mQp8Zr2Tx",
-    "alnum32": "G5hQmT9Zs1BcK8rV2xY4nP7uD3jL6wEa"
-  };
-  
-  const v = samples[type] || "";
-  if (v) {
-    $("token").value = v;
-    analyze();
-  }
-}
-
-function clearAll(){
-  $("token").value = "";
-  analyze();
-}
-
-function bind(){
-  // Prevent event handler duplication
-  $("btnAnalyze").addEventListener("click", analyze, { once: false });
-  $("btnClear").addEventListener("click", clearAll, { once: false });
-  document.querySelectorAll(".sample-btn").forEach(btn=>{
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      const sampleType = btn.dataset.sample;
-      // Validate sample type
-      if (sampleType && /^[a-z0-9]+$/i.test(sampleType)) {
-        fillSample(sampleType);
-      }
-    }, { once: false });
-  });
-  
-  // Add input event rate limiting
-  let analyzeTimeout;
-  $("token").addEventListener("input", () => {
-    clearTimeout(analyzeTimeout);
-    analyzeTimeout = setTimeout(analyze, 500);
-  });
-}
-
-bind();
-analyze(); // initial
+  initLanguage();
+  bind();
+  initHelp();
+  globalThis.TokenTheme.init($('btnTheme'), t);
+  render();
+  document.documentElement.setAttribute('data-ready', 'true');
+})();

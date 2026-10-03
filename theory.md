@@ -87,12 +87,14 @@ H_emp = (-∑ p_i × log₂(p_i)) × n
 
 ### 3.2 平均必要試行数
 
-攻撃者が総当たりするとき、「探索空間の半分 ≈ 中央値」で発見
-
+候補が N＝|Σ|ⁿ 通りあり、重複なしで1つずつ試すと、当たるまでの回数の平均は (N+1)÷2 回です。
+同時に使われている有効な値が K 個あり、どれか1つに当たればよいなら、平均は (N+1)÷(K+1) 回、最悪は N−K+1 回になります。
 
 ```
-N_guess ≈ |Σ|ⁿ ÷ 2
+N_guess ≈ |Σ|ⁿ ÷ 2（有効な値が K 個なら (N+1)÷(K+1)）
 ```
+
+OWASP Session Management Cheat Sheet の例（64ビットのセッションIDが10万個使われていて、1秒に1万回試せる）は、この式で約585年です。
 
 ### 3.3 総当たり所要時間
 ```
@@ -104,48 +106,64 @@ T ≈ (|Σ|ⁿ ÷ 2) ÷ R
 ```
 H = 95 bits
 探索空間 = 2^95 ≈ 4e28
-中央値試行 = 2^94
+平均の試行回数 = 2^94 ≈ 2e28
 R = 1e9/sec
-→ 推定時間 ≈ 6.3e14 年
+→ 推定時間 ≈ 2e19 秒 ≈ 6.3e11 年（約6300億年）
 ```
 
 ---
 
-## 4. UUID v4 の特例
+## 4. UUID の版ごとのランダムな部分
+
+UUID の形式は RFC 9562（2024年、RFC 4122 を置き換えた）が定めています。
 
 ```
 UUID v4 = 128bit だが…
 ├─ version フィールド = 4 固定 (4bit)
-└─ variant フィールド = 特定パターン (2-3bit)
+└─ variant フィールド = 10 固定 (2bit)
 ↓
-実効エントロピー ≈ 122 bits
+ランダムな部分 = 122 bits
+
+UUID v7 = 48bit のミリ秒の時刻 + 74bit の乱数（rand_a 12bit + rand_b 62bit）
+↓
+ランダムな部分 = 74 bits（時刻は読めて、推測できる）
 ```
 
-本ツールでは教育上「≈122 bits」と近似表示。
+v1・v6 は時刻と機器の番号から、v3・v5 は名前のハッシュから作るので、秘密の値には使えません。本ツールは版を読み、v4 は122ビット、v7 は74ビットとして数えます。
 
 ---
 
-## 5. 強度判定の目安
+## 5. 判定の基準
 
-| 推定エントロピー | 判定   | 例 |
-|-----------------|-------|--------------------|
-| <64 bits        | 弱い  | 英数字8桁程度 |
-| 64〜99 bits     | ふつう | 英数字16桁程度 |
-| ≥100 bits       | 強い  | 英数字32桁, UUID v4 |
+本ツールは、規範の値から基準を選びます。
+
+| 基準 | ビット数 | 出典 |
+|------|---------|------|
+| セッションID | 64 | OWASP Session Management Cheat Sheet、NIST SP 800-63B-4 |
+| 長く使う鍵（2030年まで） | 112 | NIST SP 800-57 Part 1 Rev.5 表4 |
+| 長く使う鍵（2031年から） | 128 | NIST SP 800-57 Part 1 Rev.5 表4 |
+| ワンタイムパスワードの鍵 | 160 | RFC 4226（128ビット以上は必須、160ビットを推奨） |
+| JWT の HS256 の鍵 | 256 | RFC 7518 3.2 |
+
+英数字（62種）なら、128ビットに22文字、256ビットに43文字が要ります。16進数なら32文字と64文字です。
 
 ---
 
 ## 6. 注意事項
 
-- 計算は「理想的な一様乱数」を仮定  
-- 人為的パターン（時刻や連番）は評価対象外  
-- 単一サンプルから真のエントロピーを厳密に推定することは不可能  
+- 計算は「理想的な一様乱数」を仮定
+- 単一サンプルから真のエントロピーを厳密に推定することは不可能。本ツールは、偶然では起きにくい構造（同じ文字の繰り返し・並び・中身が読める）だけを知らせる
+- 文字列のシャノンエントロピー（出現率から出す値）は、長さ n では log₂(n) を超えない。作り方のエントロピーとは別物
+- 量子計算機による総当たり（Grover の探索）では、試行回数がおよそ平方根になる。目安としては、ビット数が半分になったときの強さ    
 
 👉 あくまで **教育・設計支援**用の推定ツール
 
 ---
 
 ## 7. 参考文献
-- C. E. Shannon, *A Mathematical Theory of Communication*, 1948  
-- RFC 4122: A Universally Unique IDentifier (UUID) URN Namespace  
-- NIST SP 800-63B: Digital Identity Guidelines – Authentication and Lifecycle Management
+- C. E. Shannon, *A Mathematical Theory of Communication*, 1948
+- RFC 9562: Universally Unique IDentifiers (UUIDs)（RFC 4122 を置き換えた）
+- NIST SP 800-63B-4: Digital Identity Guidelines – Authentication and Authenticator Management
+- NIST SP 800-57 Part 1 Rev. 5: Recommendation for Key Management
+- RFC 4226: HOTP、RFC 7518: JSON Web Algorithms
+- OWASP Session Management Cheat Sheet
