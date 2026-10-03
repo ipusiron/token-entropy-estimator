@@ -421,6 +421,7 @@
         const u = uuidInfo(text);
         res.format = 'uuid';
         res.details = u;
+        res.alphabet = { id: 'hex', size: ALPHABETS.hex };
         if (u.randomBits !== null) {
           res.bits = u.randomBits;
           res.bitsKind = 'spec';
