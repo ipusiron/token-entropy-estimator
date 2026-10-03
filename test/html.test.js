@@ -36,7 +36,10 @@ test('インラインのスクリプト・イベントハンドラー・style �
 test('画面の要素の id がそろっている（それぞれ1つだけ）', () => {
   const ids = ['token', 'btnClear', 'charset', 'customSizeField', 'customSize', 'standard', 'customBitsField', 'customBits', 'customBitsError', 'valid',
     'validError', 'gpus', 'gpusError', 'customRate', 'customRateError', 'verdict', 'bits', 'bitsKind', 'format', 'alphabet', 'counted', 'perChar',
-    'shannon', 'gauge', 'gaugeFill', 'gaugeMark', 'notes', 'timeTable', 'scanTable', 'btnTheme', 'btnLang', 'helpDialog', 'helpTitle', 'helpClose'];
+    'shannon', 'gauge', 'gaugeFill', 'gaugeMark', 'notes', 'timeTable', 'scanTable', 'btnTheme', 'btnLang', 'helpDialog', 'helpTitle', 'helpClose',
+    'batch', 'batchClear', 'batchVerdict', 'batchCount', 'batchLength', 'batchAlphabet', 'batchDup', 'batchSum', 'batchBaseline', 'batchSingle',
+    'batchChart', 'batchNotes', 'lengthTable', 'genAlphabet', 'genBits', 'genLength', 'genBias', 'genMake', 'genOutput', 'genCopy', 'genToResult',
+    'genToBatch', 'genStatus'];
   for (const id of ids) assert.equal(html.split(`id="${id}"`).length - 1, 1, id);
   const all = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
   assert.equal(new Set(all).size, all.length);
@@ -45,7 +48,7 @@ test('画面の要素の id がそろっている（それぞれ1つだけ）', 
 test('ボタンには type、入力欄にはラベル、状態の表示は aria-live、外部リンクは noopener noreferrer', () => {
   for (const m of html.matchAll(/<button\b[^>]*>/g)) assert.match(m[0], /type="button"/, m[0]);
   for (const m of html.matchAll(/<(input|textarea|select)\b[^>]*id="([^"]+)"/g)) assert.match(html, new RegExp(`<label for="${m[2]}"`), m[2]);
-  for (const id of ['verdict', 'notes', 'customBitsError', 'validError', 'gpusError', 'customRateError']) {
+  for (const id of ['verdict', 'notes', 'customBitsError', 'validError', 'gpusError', 'customRateError', 'batchVerdict', 'batchNotes', 'genStatus']) {
     assert.match(html, new RegExp(`id="${id}"[^>]*aria-live="polite"`), id);
   }
   for (const m of html.matchAll(/<a\b[^>]*target="_blank"[^>]*>/g)) assert.match(m[0], /rel="noopener noreferrer"/, m[0]);
@@ -56,7 +59,7 @@ test('サンプルのボタンは js/samples.js の順と同じ。ヘルプの ?
   const buttons = [...html.matchAll(/data-sample="(\w+)"/g)].map((m) => m[1]);
   assert.deepEqual(buttons, ['uuid4', 'uuid7', 'hex32', 'base64', 'alnum16', 'alnum32', 'jwt', 'github', 'same', 'password']);
   const helps = [...html.matchAll(/class="help-icon" data-help="(\w+)" aria-label="[^"]+"/g)].map((m) => m[1]);
-  assert.deepEqual(helps, ['charset', 'standard', 'valid', 'shannon', 'time', 'scanners']);
+  assert.deepEqual(helps, ['charset', 'standard', 'valid', 'shannon', 'time', 'scanners', 'batch']);
   for (const h of helps) assert.match(html, new RegExp(`data-help-topic="${h}" hidden`), h);
   assert.match(html, /<dialog id="helpDialog" class="help-dialog" aria-labelledby="helpTitle">/);
   // ? ボタンは label の外に置く（label の中だと、押したときに入力欄へフォーカスが移る）

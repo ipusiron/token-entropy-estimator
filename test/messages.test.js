@@ -57,3 +57,12 @@ test('置き場所 {name} を値で埋める。未知のキーはキーのまま
   assert.equal(t('no.such.key'), 'no.such.key');
   assert.equal(t('verdict.meets', {}), '基準（{std}ビット）以上です');
 });
+
+test('英語の個数の文は 1 でも崩れない（{count} の直後に複数形の名詞を置かない）', () => {
+  for (const [key, text] of Object.entries(MESSAGES.en)) {
+    if (!key.startsWith('w.batch') || !text.includes('{count}')) continue;
+    const after = text.split('{count}')[1].trimStart().split(' ')[0];
+    assert.ok(!['tokens', 'positions', 'characters'].includes(after), `${key}: ${text}`);
+  }
+  assert.equal(t('w.batchWeak', { count: 1 }, 'en'), 'Positions skewed below half the guide for random strings of the same count: 1.');
+});

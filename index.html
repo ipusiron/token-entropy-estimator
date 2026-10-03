@@ -176,6 +176,76 @@
       <p class="note" data-i18n="scan.gitleaksNote">gitleaksは、key・tokenなどの言葉の近くにある文字列にだけ、このしきい値を使います。</p>
     </section>
 
+    <section class="card" aria-labelledby="batchHeading">
+      <div class="heading-help">
+        <h2 id="batchHeading" data-i18n="ui.batchHeading">複数のトークンをまとめて比べる</h2>
+        <button type="button" class="help-icon" data-help="batch" aria-label="一括分析の説明" data-i18n-attr="aria-label:ui.helpBatchLabel">?</button>
+      </div>
+      <p data-i18n="ui.batchIntro">同じ仕組みで作ったトークンを、1行に1つずつ貼り付けます（20個以上、できれば100個以上）。1本では分からない、固定の部分・重複・増え続ける順番・偏った位置が見えてきます。</p>
+      <div class="label-row">
+        <label for="batch" data-i18n="ui.batchLabel">トークン（1行に1つ）</label>
+        <button type="button" id="batchClear" class="secondary small" data-i18n="ui.clear">クリア</button>
+      </div>
+      <textarea id="batch" rows="6" autocomplete="off" autocapitalize="off" spellcheck="false" wrap="off"></textarea>
+      <div class="samples" role="group" aria-labelledby="batchSamplesLabel">
+        <span id="batchSamplesLabel" class="samples-label" data-i18n="ui.samples">サンプル</span>
+        <button type="button" class="sample-btn batch-sample" data-batch="random" data-i18n="ui.batchSampleRandom">乱数（英数字32字）×100</button>
+        <button type="button" class="sample-btn batch-sample" data-batch="counter" data-i18n="ui.batchSampleCounter">連番×100</button>
+        <button type="button" class="sample-btn batch-sample" data-batch="uuid7" data-i18n="ui.batchSampleUuid7">UUID v7（3ミリ秒おき）×100</button>
+      </div>
+      <p id="batchVerdict" class="verdict" aria-live="polite"></p>
+      <div class="result-grid">
+        <div class="kv"><span data-i18n="ui.batchCountLabel">個数</span><strong id="batchCount">—</strong></div>
+        <div class="kv"><span data-i18n="ui.batchLengthLabel">長さ</span><strong id="batchLength">—</strong></div>
+        <div class="kv"><span data-i18n="ui.charsetResultLabel">文字の集合</span><strong id="batchAlphabet">—</strong></div>
+        <div class="kv"><span data-i18n="ui.batchDupLabel">重複</span><strong id="batchDup">—</strong></div>
+        <div class="kv"><span data-i18n="ui.batchSumLabel">位置ごとの最小エントロピーの和</span><strong id="batchSum">—</strong></div>
+        <div class="kv"><span data-i18n="ui.batchBaselineLabel">同じ個数の乱数なら</span><strong id="batchBaseline">—</strong></div>
+        <div class="kv"><span data-i18n="ui.batchSingleLabel">1本ずつの見積もり（中央値）</span><strong id="batchSingle">—</strong></div>
+      </div>
+      <h3 data-i18n="ui.batchChartHeading">位置ごとの最小エントロピー</h3>
+      <div class="batch-chart" id="batchChart" aria-hidden="true"></div>
+      <p class="note" data-i18n="ui.batchChartNote">棒は位置ごとの最小エントロピー（−log₂ 最も多い文字の割合）、点線は同じ個数の乱数の目安です。赤は全部同じ文字の位置、橙は目安の半分に満たない位置です。個数がnのとき、1位置の値はlog₂(n)を超えないので、個数が少ないと本物の乱数でも低く出ます。</p>
+      <h3 data-i18n="ui.notesHeading">気づいたこと</h3>
+      <ul id="batchNotes" class="notes" aria-live="polite"></ul>
+    </section>
+
+    <section class="card" aria-labelledby="genHeading">
+      <h2 id="genHeading" data-i18n="ui.genHeading">安全なトークンを作る</h2>
+      <p data-i18n="ui.genIntro">目標のビット数と文字の集合から、必要な長さが決まります。ブラウザーの暗号用の乱数（crypto.getRandomValues）で、偏りが出ない方法（棄却法）で作ります。作ったトークンはどこにも送りません。</p>
+      <h3 data-i18n="ui.genTableHeading">必要な長さ（文字数）</h3>
+      <div class="table-wrap">
+        <table class="data-table" id="lengthTable">
+          <thead><tr></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="genAlphabet" data-i18n="ui.genAlphabetLabel">文字の集合</label>
+          <select id="genAlphabet"></select>
+        </div>
+        <div class="field">
+          <label for="genBits" data-i18n="ui.genBitsLabel">目標のビット数</label>
+          <select id="genBits"></select>
+        </div>
+      </div>
+      <p id="genLength" class="gen-length"></p>
+      <p id="genBias" class="note"></p>
+      <p class="note" data-i18n="ui.genRandomNote">Math.random は暗号用の乱数ではないので使いません。</p>
+      <div class="button-row">
+        <button type="button" id="genMake" data-i18n="ui.genMake">作る</button>
+      </div>
+      <label for="genOutput" data-i18n="ui.genOutputLabel">作ったトークン</label>
+      <input id="genOutput" type="text" readonly autocomplete="off" spellcheck="false" />
+      <div class="button-row">
+        <button type="button" id="genCopy" class="secondary" data-i18n="ui.genCopy">コピー</button>
+        <button type="button" id="genToResult" class="secondary" data-i18n="ui.genToResult">結果欄で見る</button>
+        <button type="button" id="genToBatch" class="secondary" data-i18n="ui.genToBatch">100個を一括分析へ</button>
+      </div>
+      <p id="genStatus" class="status" aria-live="polite"></p>
+    </section>
+
     <section class="card" aria-labelledby="howHeading">
       <h2 id="howHeading" data-i18n="ui.howHeading">見積もりの仕組み</h2>
       <div class="how-grid">
@@ -185,6 +255,19 @@
         <div class="how-item"><h3 data-i18n="ui.howTimeTitle">時間</h3><p data-i18n="ui.howTime">候補は「2のビット数乗」通りあり、それを場面ごとの速さで試すとして、当たるまでの時間を出します。有効な値が多いほど、どれか1つには早く当たります。</p></div>
         <div class="how-item"><h3 data-i18n="ui.howLimitTitle">限界</h3><p data-i18n="ui.howLimit">1本の文字列からは、ランダムに作ったかどうかは分かりません。分かるのは上限と、明らかな構造（同じ文字の繰り返し・並び・中身が読める）だけです。</p></div>
       </div>
+    </section>
+    <section class="card" aria-labelledby="relatedHeading">
+      <h2 id="relatedHeading" data-i18n="ui.relatedHeading">関連ツール</h2>
+      <ul class="related">
+        <li><a href="https://ipusiron.github.io/password-checker/" target="_blank" rel="noopener noreferrer">Day001 Password Checker</a><span class="related-desc" data-i18n="ui.relatedDay001">人が考えたパスワードの強さを、辞書や規則も含めて確かめる</span></li>
+        <li><a href="https://ipusiron.github.io/hash-detector/" target="_blank" rel="noopener noreferrer">Day002 Hash Detector</a><span class="related-desc" data-i18n="ui.relatedDay002">16進数の文字列が、どのハッシュ関数の値かを見分ける</span></li>
+        <li><a href="https://ipusiron.github.io/git-secrets-playground/" target="_blank" rel="noopener noreferrer">Day031 Git Secrets Playground</a><span class="related-desc" data-i18n="ui.relatedDay031">Gitに秘密情報を入れてしまったときの、見つかり方と消し方を試す</span></li>
+        <li><a href="https://ipusiron.github.io/basexx-visualizer/" target="_blank" rel="noopener noreferrer">Day052 BaseXX Visualizer</a><span class="related-desc" data-i18n="ui.relatedDay052">Base32・Base58・Base64などの符号化の違いを比べる</span></li>
+        <li><a href="https://ipusiron.github.io/jwt-inspector/" target="_blank" rel="noopener noreferrer">Day053 JWT Inspector</a><span class="related-desc" data-i18n="ui.relatedDay053">JWTのヘッダー・ペイロード・署名を読み、検証する</span></li>
+        <li><a href="https://ipusiron.github.io/infoquantity-academy/" target="_blank" rel="noopener noreferrer">Day073 InfoQuantity Academy</a><span class="related-desc" data-i18n="ui.relatedDay073">情報量（ビット）の考え方を基礎から学ぶ</span></li>
+        <li><a href="https://ipusiron.github.io/keywalk-analyzer/" target="_blank" rel="noopener noreferrer">Day089 Keywalk Analyzer</a><span class="related-desc" data-i18n="ui.relatedDay089">キーボードの並びに頼ったパスワードを見つける</span></li>
+      </ul>
+      <p class="note" data-i18n="ui.relatedNote">リンクはページを開くだけで、入力したトークンは渡しません。</p>
     </section>
     <dialog id="helpDialog" class="help-dialog" aria-labelledby="helpTitle">
       <div class="help-head">
@@ -218,6 +301,11 @@
       <section class="help-topic" data-help-topic="shannon" hidden>
         <p data-i18n="ui.helpShannon1">文字列の中の文字の出現率から出す値（−Σ p log₂ p）です。作り方のエントロピーではありません。</p>
         <p data-i18n="ui.helpShannon2">長さnでは log₂(n) を超えないので、短い文字列では、ランダムでも小さく出ます。同じ文字ばかりだと0に近づきます。</p>
+      </section>
+      <section class="help-topic" data-help-topic="batch" hidden>
+        <p data-i18n="ui.helpBatch1">同じ仕組みで作ったトークンを並べ、位置ごとに文字の出方を比べます。Burp Suite Sequencer（PortSwigger）が、100〜20,000個のトークンで行っている分析の考え方を、ブラウザーの中で小さく試すものです。</p>
+        <p data-i18n="ui.helpBatch2">位置ごとの最小エントロピーは、その位置で最も多い文字の割合pから −log₂ p で出します。同じ個数の乱数の目安は、同じ個数を同じ文字の集合から一様に選んだときの値を、決まった種の乱数で200回試した平均です。</p>
+        <p data-i18n="ui.helpBatch3">構造が見つからなくても、ランダムだと証明したわけではありません。乱数の検定（NIST SP 800-90B など）は、はるかに多くの標本を使います。</p>
       </section>
     </dialog>
   </main>
