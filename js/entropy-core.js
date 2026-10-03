@@ -639,7 +639,6 @@
     res.minLength = Math.min(...lengths);
     res.maxLength = Math.max(...lengths);
     res.duplicates = n - new Set(strings).size;
-    res.alphabet = detectAlphabet(tokens.flat());
     for (let i = 0; i < res.maxLength; i++) {
       const counts = new Map();
       let present = 0;
@@ -657,23 +656,39 @@
     res.prefixLength = prefix;
     res.prefix = tokens[0].slice(0, prefix).join('');
     res.constantPositions = res.positions.filter((p) => p.constant).length;
+    // 文字の集合は、文字が変わる位置の文字から選ぶ（UUID のハイフンのような固定の文字で集合を広げない）
+    const varying = [];
+    for (const t of tokens) {
+      t.forEach((ch, i) => {
+        if (!res.positions[i].constant) varying.push(ch);
+      });
+    }
+    res.alphabet = detectAlphabet(varying.length ? varying : tokens.flat());
     let up = 0;
     for (let i = 1; i < n; i++) if (strings[i] > strings[i - 1]) up++;
     res.increasingShare = n > 1 ? up / (n - 1) : 0;
     res.sumMinEntropy = res.positions.reduce((a, p) => a + p.minEntropy, 0);
     res.capPerPosition = log2(n);
+    // 1本の見積もり: それぞれのトークンを1本ずつ見積もった値の中央値（UUID v7 なら74ビット）
+    const singles = strings.map((s) => analyze(s).bits).filter((b) => b !== null).sort((a, b) => a - b);
+    res.singleBits = singles.length ? singles[Math.floor(singles.length / 2)] : null;
     const k = res.alphabet.size;
+    let constantByChance = false;
+    let duplicateByChance = false;
     if (k) {
       res.baselinePerPosition = baselineMinEntropy(n, k);
       res.baselineSum = res.baselinePerPosition * res.maxLength;
-      res.singleBits = res.maxLength * log2(k);
-      res.weakPositions = res.positions.filter((p) => p.minEntropy < BATCH_WEAK_RATIO * res.baselinePerPosition).length;
+      // 固定の位置（それぞれの位置で全部が同じ文字）は、この個数・文字の数なら偶然には起きにくいか（期待値 L×k^(1−n)）
+      constantByChance = Math.log10(res.maxLength) + (1 - n) * Math.log10(k) >= Math.log10(CHANCE_LIMIT);
+      // 重複（期待値 n(n−1)/2 × k^(−L)）
+      duplicateByChance = Math.log10((n * (n - 1)) / 2) - res.minLength * Math.log10(k) >= Math.log10(CHANCE_LIMIT);
+      res.weakPositions = res.positions.filter((p) => !p.constant && p.minEntropy < BATCH_WEAK_RATIO * res.baselinePerPosition).length;
     }
     if (n < BATCH_MIN) res.warnings.push({ id: 'batchFew', min: BATCH_MIN });
     if (res.overLimit) res.warnings.push({ id: 'batchOverLimit', max: BATCH_MAX });
-    if (res.duplicates) res.warnings.push({ id: 'batchDuplicates', count: res.duplicates });
+    if (res.duplicates && !duplicateByChance) res.warnings.push({ id: 'batchDuplicates', count: res.duplicates });
     if (res.minLength !== res.maxLength) res.warnings.push({ id: 'batchLengths', min: res.minLength, max: res.maxLength });
-    if (n >= 2 && res.constantPositions) res.warnings.push({ id: 'batchConstant', count: res.constantPositions, prefix: res.prefix });
+    if (n >= 2 && res.constantPositions && !constantByChance) res.warnings.push({ id: 'batchConstant', count: res.constantPositions, prefix: res.prefix });
     if (n >= BATCH_MIN && res.increasingShare >= BATCH_INCREASING) res.warnings.push({ id: 'batchIncreasing', share: res.increasingShare });
     if (n >= BATCH_MIN && res.weakPositions) res.warnings.push({ id: 'batchWeak', count: res.weakPositions });
     if (!k) res.warnings.push({ id: 'nonAscii' });

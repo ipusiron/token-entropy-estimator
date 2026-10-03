@@ -12,7 +12,8 @@
 
   // 画面の状態。入力・前提を変えたら、ここを書き換えて render() で全体を描き直す
   const state = {
-    token: '', charset: 'auto', customSize: '100', standard: TE.DEFAULT_STANDARD, customBits: '96', valid: '1', gpus: '1', customRate: ''
+    token: '', charset: 'auto', customSize: '100', standard: TE.DEFAULT_STANDARD, customBits: '96', valid: '1', gpus: '1', customRate: '',
+    batch: '', batchResult: null
   };
 
   function el(tag, props = {}, children = []) {
@@ -183,6 +184,115 @@
     }));
   }
 
+  // ===== 複数のトークンの一括分析 =====
+  // 結果は state.batchResult に持ち、言語を切り替えたときは計算し直さずに描き直す
+  const cryptoBytes = (buf) => globalThis.crypto.getRandomValues(buf);
+
+  function batchSample(kind) {
+    if (kind === 'random') return Array.from({ length: 100 }, () => TE.generate('base62', 32, cryptoBytes)).join('\n');
+    if (kind === 'counter') {
+      const start = parseInt(TE.generate('hex', 7, cryptoBytes), 16);
+      return Array.from({ length: 100 }, (_, i) => (start + i).toString(16).padStart(32, '0')).join('\n');
+    }
+    const now = Date.now();
+    return Array.from({ length: 100 }, (_, i) => TE.makeUuidV7(now + i * 3, cryptoBytes)).join('\n');
+  }
+
+  function batchWarning(w) {
+    switch (w.id) {
+      case 'batchFew': return t('w.batchFew', { min: w.min });
+      case 'batchOverLimit': return t('w.batchOverLimit', { max: w.max.toLocaleString('en-US') });
+      case 'batchDuplicates': return t('w.batchDuplicates', { count: w.count });
+      case 'batchLengths': return t('w.batchLengths', { min: w.min, max: w.max });
+      case 'batchConstant': return w.prefix ? t('w.batchConstant', { count: w.count, prefix: w.prefix }) : t('w.batchConstantInside', { count: w.count });
+      case 'batchIncreasing': return t('w.batchIncreasing', { share: Math.round(w.share * 100) });
+      case 'batchWeak': return t('w.batchWeak', { count: w.count });
+      default: return t(`w.${w.id}`);
+    }
+  }
+
+  function renderBatchChart(r) {
+    const chart = $('batchChart');
+    if (!r.count || !r.alphabet || !r.alphabet.size) {
+      chart.replaceChildren();
+      return;
+    }
+    const top = Math.max(Math.log2(r.alphabet.size), r.baselinePerPosition, ...r.positions.map((p) => p.minEntropy));
+    const bars = r.positions.map((p) => {
+      const weak = !p.constant && p.minEntropy < TE.BATCH_WEAK_RATIO * r.baselinePerPosition;
+      const bar = el('span', { className: `pbar${p.constant ? ' constant' : weak ? ' weak' : ''}` });
+      bar.style.height = `${Math.max(1, (p.minEntropy / top) * 100)}%`;
+      return bar;
+    });
+    const line = el('span', { className: 'batch-baseline' });
+    line.style.bottom = `${(r.baselinePerPosition / top) * 100}%`;
+    chart.replaceChildren(...bars, line);
+  }
+
+  function renderBatch() {
+    const r = state.batchResult;
+    const verdict = $('batchVerdict');
+    const set = (id, text) => {
+      $(id).textContent = text;
+    };
+    if (!r || !r.count) {
+      verdict.textContent = t('batch.empty');
+      verdict.className = 'verdict';
+      for (const id of ['batchCount', 'batchLength', 'batchAlphabet', 'batchDup', 'batchSum', 'batchBaseline', 'batchSingle']) set(id, '—');
+      $('batchNotes').replaceChildren();
+      renderBatchChart({ count: 0 });
+      return;
+    }
+    verdict.textContent = r.verdict === 'few' ? t('batch.few', { min: TE.BATCH_MIN }) : t(`batch.${r.verdict}`);
+    verdict.className = `verdict ${r.verdict === 'structure' ? 'verdict-pattern' : r.verdict === 'none' ? 'verdict-meets' : ''}`.trim();
+    set('batchCount', t('batch.count', { n: r.count.toLocaleString('en-US') }));
+    const same = r.minLength === r.maxLength;
+    set('batchLength', same ? t('batch.lengthSame', { n: r.maxLength }) : t('batch.lengthRange', { min: r.minLength, max: r.maxLength }));
+    set('batchAlphabet', alphabetName(r.alphabet));
+    set('batchDup', t('batch.count', { n: r.duplicates }));
+    set('batchSum', t('batch.bits', { bits: fmtBits(r.sumMinEntropy) }));
+    set('batchBaseline', r.baselineSum ? t('batch.bits', { bits: fmtBits(r.baselineSum) }) : '—');
+    set('batchSingle', r.singleBits ? t('batch.bits', { bits: fmtBits(r.singleBits) }) : '—');
+    $('batchNotes').replaceChildren(...r.warnings.map((w) => el('li', { text: batchWarning(w) })));
+    renderBatchChart(r);
+  }
+
+  function analyzeBatch() {
+    state.batchResult = TE.batchAnalyze(state.batch);
+    renderBatch();
+  }
+
+  function bindBatch() {
+    const box = $('batch');
+    let timer = null;
+    const later = () => {
+      clearTimeout(timer);
+      timer = setTimeout(analyzeBatch, 200);
+    };
+    box.addEventListener('input', (e) => {
+      if (e.isComposing) return;
+      state.batch = box.value;
+      later();
+    });
+    box.addEventListener('compositionend', () => {
+      state.batch = box.value;
+      later();
+    });
+    $('batchClear').addEventListener('click', () => {
+      box.value = '';
+      state.batch = '';
+      analyzeBatch();
+      box.focus();
+    });
+    for (const btn of document.querySelectorAll('.batch-sample')) {
+      btn.addEventListener('click', () => {
+        box.value = batchSample(btn.dataset.batch);
+        state.batch = box.value;
+        analyzeBatch();
+      });
+    }
+  }
+
   function render() {
     const s = settings();
     const r = TE.analyze(state.token, { override: state.charset, customSize: Number(state.customSize) });
@@ -203,6 +313,7 @@
     renderNotes(r);
     renderTime(r, s);
     renderScanners(r);
+    renderBatch();
   }
 
   function bind() {
@@ -279,6 +390,7 @@
 
   initLanguage();
   bind();
+  bindBatch();
   initHelp();
   globalThis.TokenTheme.init($('btnTheme'), t);
   render();

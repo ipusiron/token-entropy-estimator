@@ -71,6 +71,23 @@ test('UUID v7（3ミリ秒おきに100個）: 先頭の時刻の部分が固定�
   assert.equal(r.verdict, 'structure');
   assert.ok(r.prefixLength >= 8, String(r.prefixLength));
   assert.equal(r.increasingShare, 1);
+  // 文字の集合は変わる位置の文字から選ぶ（ハイフンで base64url にしない）。1本の見積もりは74ビット
+  assert.deepEqual([r.alphabet.id, r.singleBits], ['hex', 74]);
+  // 固定の位置（時刻の上位・ハイフン・版の7）は「偏った位置」に重ねて数えない
+  assert.ok(r.weakPositions < r.maxLength - r.constantPositions, `${r.weakPositions}`);
+});
+
+test('偶然でも起きる固定の位置は知らせない（16進数32字×3個では、どこか1か所がそろうことがよくある）', () => {
+  // 期待値 32×16^(1−3)＝0.125 なので、そろった位置があっても構造とはしない
+  const text = ['3f1a0b2c9d7e4a1f0c5b6d8e2a7c9b1d', '8b1e0f2a5c7d4e9f1a3b6c8d0e2f4a6b', 'c41a7e2f9b0d3c5e8a1f6b4d2c9e7a0f'].join('\n');
+  const r = TE.batchAnalyze(text);
+  assert.ok(r.constantPositions >= 1, String(r.constantPositions));
+  assert.ok(!r.warnings.some((w) => w.id === 'batchConstant'));
+  assert.equal(r.verdict, 'few');
+  // 10個の英数字では、そろった位置は偶然ではまず起きないので知らせる
+  const ten = TE.batchAnalyze(Array.from({ length: 10 }, (_, i) => `tok${String(i).padStart(4, '0')}${randomSet(20 + i, 1, 12)}`).join('\n'));
+  assert.ok(ten.warnings.some((w) => w.id === 'batchConstant' && w.prefix === 'tok000'));
+  assert.equal(ten.verdict, 'structure');
 });
 
 test('重複・個数の不足・長さの違い・上限', () => {

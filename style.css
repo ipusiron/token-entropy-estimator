@@ -674,3 +674,38 @@ button.secondary:hover {
     animation: none !important;
   }
 }
+
+/* 一括分析: 位置ごとの最小エントロピーの棒と、同じ個数の乱数の目安の線 */
+.batch-chart {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 140px;
+  margin: 8px 0;
+  padding: 0 1px;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.pbar {
+  flex: 1 1 0;
+  min-width: 1px;
+  background: var(--gauge-fill);
+}
+
+.pbar.constant {
+  min-height: 4px;
+  background: var(--below-text);
+}
+
+.pbar.weak {
+  background: var(--pattern-text);
+}
+
+.batch-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px dotted var(--text);
+}
