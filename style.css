@@ -388,6 +388,11 @@ button.secondary:hover {
   border-color: var(--border);
 }
 
+/* 一括分析: サンプルの行のすぐ下に判定が来る。フォーカスの枠（外側5px）が判定に重ならない間を空ける */
+.samples + .verdict {
+  margin-top: 16px;
+}
+
 .options {
   margin-top: 16px;
   border-top: 1px solid var(--border);
