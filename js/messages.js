@@ -333,7 +333,7 @@
     'ui.tabsLabel': 'Switch features',
     'ui.tabSingle': 'Check one',
     'ui.tabBatch': 'Compare many',
-    'ui.tabMake': 'Generate',
+    'ui.tabMake': 'Make',
     'ui.tabMore': 'Extras',
     'ui.inputHeading': 'Input',
     'ui.tokenLabel': 'Token',

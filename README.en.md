@@ -26,7 +26,7 @@ You can try it directly in your browser.
 
 >![Result for a GitHub token](assets/en/screenshot.png)
 >
->*A GitHub-style token. The 30 random characters without the prefix and the checksum (CRC-32) are counted: 178.6 bits, which meets the 128-bit standard*
+>*A GitHub-style token in the "Check one" tab. The 30 random characters without the prefix and the checksum (CRC-32) are counted: 178.6 bits, which meets the 128-bit standard*
 
 >![Result for UUID v7](assets/en/screenshot2.png)
 >
@@ -84,11 +84,13 @@ You can try it directly in your browser.
 ### 🔐 Making a secure token
 
 - Shows a table of the required length for each standard (64-256 bits) and character set (hexadecimal, Base32, alphanumeric, base64url, digits, printable ASCII)
-- Makes tokens without bias with `crypto.getRandomValues` and rejection sampling. You can copy the token, check it in the result, or send 100 to batch analysis
+- Makes tokens without bias with `crypto.getRandomValues` and rejection sampling. You can copy the token, check it in "Check one", or send 100 to "Compare many" (the page switches to that tab)
 - Shows, for the chosen character set, the bias of choosing characters by the remainder of one byte
 
 ### 🖥️ Screen
 
+- Four tabs (Check one, Compare many, Make, Extras). The left and right arrow keys, Home and End also move between them
+- `#tab=` in the URL chooses the tab to open (`single`, `batch`, `make` or `more`; for example `#tab=batch`)
 - Japanese and English (the initial language is taken from `?lang=` in the URL, then the saved choice, then the browser language; switching keeps the input and results)
 - Light and dark modes (following the OS setting, with a button to switch)
 - Changing any input or assumption redraws the whole result from the same state
@@ -101,12 +103,14 @@ You can try it directly in your browser.
 ## 📖 Usage
 
 1. Open the public version ([https://ipusiron.github.io/token-entropy-estimator/](https://ipusiron.github.io/token-entropy-estimator/)), or download the repository and open `index.html`
-2. Paste a token or press a sample button. The result appears right away
+2. In the "Check one" tab, paste a token or press a sample button. The result appears right away
 3. Under "Findings", check the notes on the format and whether there is structure
 4. Under "Change the assumptions", change the standard, the number of valid values, the number of GPUs or the character set, and see how the time and judgment change
 5. Under "Would secret scanners find it?", see whether a scanner would find the string in your code
+6. If you have many tokens made the same way, paste them one per line into the "Compare many" tab and check for fixed parts or an ever-increasing order
+7. To make a new token, choose the character set and the target bits in the "Make" tab and press "Make"
 
-The buttons at the top right switch between Japanese and English and between light and dark.
+How the estimate works and the related tools are in the "Extras" tab. The buttons at the top right switch between Japanese and English and between light and dark.
 
 ---
 
@@ -290,7 +294,7 @@ If a character is chosen by the remainder of one byte (0-255) divided by the set
 - [Day073 InfoQuantity Academy](https://ipusiron.github.io/infoquantity-academy/): learn the idea of information quantity (bits) from the basics
 - [Day089 Keywalk Analyzer](https://ipusiron.github.io/keywalk-analyzer/): find passwords that rely on keyboard runs
 
-The links on the screen only open the pages; the token you entered is not passed on.
+The links in the "Extras" tab only open the pages; the token you entered is not passed on.
 
 ---
 
