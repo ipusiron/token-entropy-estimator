@@ -66,6 +66,18 @@ test('サンプルのボタンは js/samples.js の順と同じ。ヘルプの ?
   assert.doesNotMatch(html, /<label[^>]*>[^<]*<button/);
 });
 
+test('一括分析のサンプルの行と判定の間は、フォーカスの枠より広く空いている', () => {
+  // サンプルの行のすぐ下に判定が来る。判定の上の余白が 0 だと、ボタンと判定の枠が接し、フォーカスの枠が判定に重なる
+  assert.match(html, /data-batch="uuid7"[^\n]*\n\s*<\/div>\n\s*<p id="batchVerdict" class="verdict"/);
+  const css = read('style.css');
+  const focus = css.match(/:focus-visible \{\s*outline: (\d+)px solid [^;]+;\s*outline-offset: (\d+)px;/);
+  assert.ok(focus);
+  const ring = Number(focus[1]) + Number(focus[2]);
+  const gap = css.match(/\.samples \+ \.verdict \{\s*margin-top: (\d+)px;/);
+  assert.ok(gap, '.samples + .verdict の margin-top がない');
+  assert.ok(Number(gap[1]) >= ring + 8, `${gap[1]}px < ${ring + 8}px`);
+});
+
 test('判定の基準の選択肢は、ロジックの基準と同じ（既定は128ビット）', async () => {
   const { core } = await import('./load.js');
   const TE = core();
