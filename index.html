@@ -40,235 +40,255 @@
       <p data-i18n="ui.intro3">入力はブラウザーの中だけで扱い、どこにも送りません。</p>
     </section>
 
-    <section class="card" aria-labelledby="inputHeading">
-      <h2 id="inputHeading" data-i18n="ui.inputHeading">入力</h2>
-      <div class="label-row">
-        <label for="token" data-i18n="ui.tokenLabel">トークン</label>
-        <button type="button" id="btnClear" class="secondary small" data-i18n="ui.clear">クリア</button>
-      </div>
-      <textarea id="token" rows="3" maxlength="20000" autocomplete="off" autocapitalize="off" spellcheck="false"
-        data-i18n-attr="placeholder:ui.tokenPlaceholder" placeholder="例）3f1a0b2c…／919108f7-52d1-4320-9bac-f847db4148a8"></textarea>
-      <div class="samples" role="group" aria-labelledby="samplesLabel">
-        <span id="samplesLabel" class="samples-label" data-i18n="ui.samples">サンプル</span>
-        <button type="button" class="sample-btn" data-sample="uuid4" data-i18n="ui.sampleUuid4">UUID v4</button>
-        <button type="button" class="sample-btn" data-sample="uuid7" data-i18n="ui.sampleUuid7">UUID v7</button>
-        <button type="button" class="sample-btn" data-sample="hex32" data-i18n="ui.sampleHex32">Hex(32)</button>
-        <button type="button" class="sample-btn" data-sample="base64" data-i18n="ui.sampleBase64">Base64</button>
-        <button type="button" class="sample-btn" data-sample="alnum16" data-i18n="ui.sampleAlnum16">英数16</button>
-        <button type="button" class="sample-btn" data-sample="alnum32" data-i18n="ui.sampleAlnum32">英数32</button>
-        <button type="button" class="sample-btn" data-sample="jwt" data-i18n="ui.sampleJwt">JWT</button>
-        <button type="button" class="sample-btn" data-sample="github" data-i18n="ui.sampleGithub">GitHub形式</button>
-        <button type="button" class="sample-btn" data-sample="same" data-i18n="ui.sampleSame">同じ文字</button>
-        <button type="button" class="sample-btn" data-sample="password" data-i18n="ui.samplePassword">Password1!</button>
-      </div>
+    <div class="tabs" role="tablist" aria-label="機能の切り替え" data-i18n-attr="aria-label:ui.tabsLabel">
+      <button type="button" class="tab" role="tab" id="tab-single" aria-controls="panel-single" aria-selected="true" tabindex="0" data-tab="single">
+        <span class="tab-icon" aria-hidden="true">🔍</span><span data-i18n="ui.tabSingle">1本を調べる</span></button>
+      <button type="button" class="tab" role="tab" id="tab-batch" aria-controls="panel-batch" aria-selected="false" tabindex="-1" data-tab="batch">
+        <span class="tab-icon" aria-hidden="true">📦</span><span data-i18n="ui.tabBatch">まとめて比べる</span></button>
+      <button type="button" class="tab" role="tab" id="tab-make" aria-controls="panel-make" aria-selected="false" tabindex="-1" data-tab="make">
+        <span class="tab-icon" aria-hidden="true">🔐</span><span data-i18n="ui.tabMake">作る</span></button>
+      <button type="button" class="tab" role="tab" id="tab-more" aria-controls="panel-more" aria-selected="false" tabindex="-1" data-tab="more">
+        <span class="tab-icon" aria-hidden="true">📚</span><span data-i18n="ui.tabMore">補講</span></button>
+    </div>
 
-      <details class="options" open>
-        <summary data-i18n="ui.optionsHeading">前提を変える</summary>
+    <div class="tab-panel" id="panel-single" role="tabpanel" aria-labelledby="tab-single">
+      <section class="card" aria-labelledby="inputHeading">
+        <h2 id="inputHeading" data-i18n="ui.inputHeading">入力</h2>
+        <div class="label-row">
+          <label for="token" data-i18n="ui.tokenLabel">トークン</label>
+          <button type="button" id="btnClear" class="secondary small" data-i18n="ui.clear">クリア</button>
+        </div>
+        <textarea id="token" rows="3" maxlength="20000" autocomplete="off" autocapitalize="off" spellcheck="false"
+          data-i18n-attr="placeholder:ui.tokenPlaceholder" placeholder="例）3f1a0b2c…／919108f7-52d1-4320-9bac-f847db4148a8"></textarea>
+        <div class="samples" role="group" aria-labelledby="samplesLabel">
+          <span id="samplesLabel" class="samples-label" data-i18n="ui.samples">サンプル</span>
+          <button type="button" class="sample-btn" data-sample="uuid4" data-i18n="ui.sampleUuid4">UUID v4</button>
+          <button type="button" class="sample-btn" data-sample="uuid7" data-i18n="ui.sampleUuid7">UUID v7</button>
+          <button type="button" class="sample-btn" data-sample="hex32" data-i18n="ui.sampleHex32">Hex(32)</button>
+          <button type="button" class="sample-btn" data-sample="base64" data-i18n="ui.sampleBase64">Base64</button>
+          <button type="button" class="sample-btn" data-sample="alnum16" data-i18n="ui.sampleAlnum16">英数16</button>
+          <button type="button" class="sample-btn" data-sample="alnum32" data-i18n="ui.sampleAlnum32">英数32</button>
+          <button type="button" class="sample-btn" data-sample="jwt" data-i18n="ui.sampleJwt">JWT</button>
+          <button type="button" class="sample-btn" data-sample="github" data-i18n="ui.sampleGithub">GitHub形式</button>
+          <button type="button" class="sample-btn" data-sample="same" data-i18n="ui.sampleSame">同じ文字</button>
+          <button type="button" class="sample-btn" data-sample="password" data-i18n="ui.samplePassword">Password1!</button>
+        </div>
+
+        <details class="options" open>
+          <summary data-i18n="ui.optionsHeading">前提を変える</summary>
+          <div class="form-grid">
+            <div class="field">
+              <div class="label-help"><label for="charset" data-i18n="ui.charsetLabel">文字の集合</label>
+                <button type="button" class="help-icon" data-help="charset" aria-label="文字の集合の説明" data-i18n-attr="aria-label:ui.helpCharsetLabel">?</button></div>
+              <select id="charset">
+                <option value="auto" data-i18n="ui.csAuto">自動（見た文字から選ぶ）</option>
+                <option value="digits" data-i18n="ui.csDigits">数字（10種）</option>
+                <option value="hex" data-i18n="ui.csHex">16進数（16種）</option>
+                <option value="base32" data-i18n="ui.csBase32">Base32（32種）</option>
+                <option value="base62" data-i18n="ui.csBase62">英数字（62種）</option>
+                <option value="base64" data-i18n="ui.csBase64">Base64・base64url（64種）</option>
+                <option value="printable" data-i18n="ui.csPrintable">ASCIIの印字できる文字（95種）</option>
+                <option value="custom" data-i18n="ui.csCustom">数を指定する</option>
+              </select>
+            </div>
+            <div class="field" id="customSizeField" hidden>
+              <label for="customSize" data-i18n="ui.customSizeLabel">文字の数（2以上の整数）</label>
+              <input id="customSize" type="text" inputmode="numeric" autocomplete="off" value="100" />
+            </div>
+            <div class="field">
+              <div class="label-help"><label for="standard" data-i18n="ui.standardLabel">判定の基準</label>
+                <button type="button" class="help-icon" data-help="standard" aria-label="判定の基準の説明" data-i18n-attr="aria-label:ui.helpStandardLabel">?</button></div>
+              <select id="standard">
+                <option value="session" data-i18n="ui.stSession">セッションID：64ビット（OWASP・NIST SP 800-63B-4）</option>
+                <option value="nist112" data-i18n="ui.stNist112">長く使う鍵：112ビット（NIST SP 800-57、2030年まで）</option>
+                <option value="nist128" data-i18n="ui.stNist128" selected>長く使う鍵：128ビット（NIST SP 800-57、2031年から）</option>
+                <option value="otp" data-i18n="ui.stOtp">ワンタイムパスワードの鍵：160ビット（RFC 4226の推奨）</option>
+                <option value="hs256" data-i18n="ui.stHs256">JWTのHS256の鍵：256ビット（RFC 7518）</option>
+                <option value="custom" data-i18n="ui.stCustom">ビット数を指定する</option>
+              </select>
+            </div>
+            <div class="field" id="customBitsField" hidden>
+              <label for="customBits" data-i18n="ui.customBitsLabel">基準のビット数（1〜1024）</label>
+              <input id="customBits" type="text" inputmode="numeric" autocomplete="off" value="96" aria-describedby="customBitsError" />
+              <p id="customBitsError" class="field-error" aria-live="polite"></p>
+            </div>
+            <div class="field">
+              <div class="label-help"><label for="valid" data-i18n="ui.validLabel">有効な値の数（同時に使われているトークンの数）</label>
+                <button type="button" class="help-icon" data-help="valid" aria-label="有効な値の数の説明" data-i18n-attr="aria-label:ui.helpValidLabel">?</button></div>
+              <input id="valid" type="text" inputmode="numeric" autocomplete="off" value="1" aria-describedby="validError" />
+              <p id="validError" class="field-error" aria-live="polite"></p>
+            </div>
+            <div class="field">
+              <label for="gpus" data-i18n="ui.gpusLabel">GPUの枚数（ハッシュが漏れた場面に掛ける）</label>
+              <input id="gpus" type="text" inputmode="numeric" autocomplete="off" value="1" aria-describedby="gpusError" />
+              <p id="gpusError" class="field-error" aria-live="polite"></p>
+            </div>
+            <div class="field">
+              <label for="customRate" data-i18n="ui.customRateLabel">自由な速さ（回/秒。空欄なら使わない）</label>
+              <input id="customRate" type="text" inputmode="decimal" autocomplete="off" value="" aria-describedby="customRateError" />
+              <p id="customRateError" class="field-error" aria-live="polite"></p>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <section class="card" aria-labelledby="resultHeading">
+        <h2 id="resultHeading" data-i18n="ui.resultHeading">結果</h2>
+        <p id="verdict" class="verdict" aria-live="polite"></p>
+        <div class="result-grid">
+          <div class="kv kv-main"><span data-i18n="ui.bitsLabel">ランダムな部分</span><strong id="bits">—</strong><small id="bitsKind"></small></div>
+          <div class="kv"><span data-i18n="ui.formatLabel">形式</span><strong id="format">—</strong></div>
+          <div class="kv"><span data-i18n="ui.charsetResultLabel">文字の集合</span><strong id="alphabet">—</strong></div>
+          <div class="kv"><span data-i18n="ui.countedLabel">数えた文字</span><strong id="counted">—</strong></div>
+          <div class="kv"><span data-i18n="ui.perCharLabel">1文字あたり</span><strong id="perChar">—</strong></div>
+          <div class="kv"><span><span data-i18n="ui.shannonLabel">1文字あたりのばらつき（シャノン）</span>
+            <button type="button" class="help-icon" data-help="shannon" aria-label="シャノンエントロピーの説明" data-i18n-attr="aria-label:ui.helpShannonLabel">?</button></span>
+            <strong id="shannon">—</strong></div>
+        </div>
+        <div class="gauge-wrap">
+          <p class="gauge-label" id="gaugeLabel" data-i18n="ui.gaugeLabel">ビット数と基準（0〜256ビット）</p>
+          <div class="gauge" id="gauge" aria-hidden="true">
+            <div class="gauge-fill" id="gaugeFill"></div>
+            <div class="gauge-mark" id="gaugeMark"></div>
+          </div>
+          <div class="gauge-scale" aria-hidden="true"><span>0</span><span>64</span><span>128</span><span>192</span><span>256</span></div>
+        </div>
+        <h3 data-i18n="ui.notesHeading">気づいたこと</h3>
+        <ul id="notes" class="notes" aria-live="polite"></ul>
+
+        <div class="heading-help"><h3 data-i18n="ui.timeHeading">総当たりで当たるまでの時間</h3>
+          <button type="button" class="help-icon" data-help="time" aria-label="攻撃の場面の説明" data-i18n-attr="aria-label:ui.helpTimeLabel">?</button></div>
+        <div class="table-wrap">
+          <table class="data-table" id="timeTable">
+            <thead>
+              <tr>
+                <th scope="col" data-i18n="ui.colScenario">場面</th><th scope="col" data-i18n="ui.colRate">速さ</th>
+                <th scope="col" data-i18n="ui.colAvg">平均</th><th scope="col" data-i18n="ui.colWorst">最悪（全部試す）</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="note" data-i18n="ui.timeNote">候補がN通り、有効な値がK個あるとき、重複なしで1つずつ試して最初に当たるまでの回数は平均 (N+1)÷(K+1)、最悪N−K+1です。ハッシュが漏れた場面の速さは、hashcat 6.2.6のRTX 5090 1枚の公開ベンチマークの値です。</p>
+
+        <div class="heading-help"><h3 data-i18n="ui.scannersHeading">シークレット検出ツールから見えるか</h3>
+          <button type="button" class="help-icon" data-help="scanners" aria-label="シークレット検出の説明" data-i18n-attr="aria-label:ui.helpScannersLabel">?</button></div>
+        <div class="table-wrap">
+          <table class="data-table" id="scanTable">
+            <thead>
+              <tr>
+                <th scope="col" data-i18n="ui.colTool">ツール・ルール</th><th scope="col" data-i18n="ui.colLimit">しきい値</th>
+                <th scope="col" data-i18n="ui.colValue">この文字列</th><th scope="col" data-i18n="ui.colHit">見つかるか</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="note" data-i18n="ui.scannersNote">1文字あたりのシャノンエントロピー（文字の出現率から出す値）がしきい値を超えると、シークレットとして見つかります。長さnの文字列ではlog₂(n) が上限なので、短い文字列は本物の乱数でも見つかりません。</p>
+        <p class="note" data-i18n="scan.gitleaksNote">gitleaksは、key・tokenなどの言葉の近くにある文字列にだけ、このしきい値を使います。</p>
+      </section>
+    </div>
+
+    <div class="tab-panel" id="panel-batch" role="tabpanel" aria-labelledby="tab-batch" hidden>
+      <section class="card" aria-labelledby="batchHeading">
+        <div class="heading-help">
+          <h2 id="batchHeading" data-i18n="ui.batchHeading">複数のトークンをまとめて比べる</h2>
+          <button type="button" class="help-icon" data-help="batch" aria-label="一括分析の説明" data-i18n-attr="aria-label:ui.helpBatchLabel">?</button>
+        </div>
+        <p data-i18n="ui.batchIntro">同じ仕組みで作ったトークンを、1行に1つずつ貼り付けます（20個以上、できれば100個以上）。1本では分からない、固定の部分・重複・増え続ける順番・偏った位置が見えてきます。</p>
+        <div class="label-row">
+          <label for="batch" data-i18n="ui.batchLabel">トークン（1行に1つ）</label>
+          <button type="button" id="batchClear" class="secondary small" data-i18n="ui.clear">クリア</button>
+        </div>
+        <textarea id="batch" rows="6" autocomplete="off" autocapitalize="off" spellcheck="false" wrap="off"></textarea>
+        <div class="samples" role="group" aria-labelledby="batchSamplesLabel">
+          <span id="batchSamplesLabel" class="samples-label" data-i18n="ui.samples">サンプル</span>
+          <button type="button" class="sample-btn batch-sample" data-batch="random" data-i18n="ui.batchSampleRandom">乱数（英数字32字）×100</button>
+          <button type="button" class="sample-btn batch-sample" data-batch="counter" data-i18n="ui.batchSampleCounter">連番×100</button>
+          <button type="button" class="sample-btn batch-sample" data-batch="uuid7" data-i18n="ui.batchSampleUuid7">UUID v7（3ミリ秒おき）×100</button>
+        </div>
+        <p id="batchVerdict" class="verdict" aria-live="polite"></p>
+        <div class="result-grid">
+          <div class="kv"><span data-i18n="ui.batchCountLabel">個数</span><strong id="batchCount">—</strong></div>
+          <div class="kv"><span data-i18n="ui.batchLengthLabel">長さ</span><strong id="batchLength">—</strong></div>
+          <div class="kv"><span data-i18n="ui.charsetResultLabel">文字の集合</span><strong id="batchAlphabet">—</strong></div>
+          <div class="kv"><span data-i18n="ui.batchDupLabel">重複</span><strong id="batchDup">—</strong></div>
+          <div class="kv"><span data-i18n="ui.batchSumLabel">位置ごとの最小エントロピーの和</span><strong id="batchSum">—</strong></div>
+          <div class="kv"><span data-i18n="ui.batchBaselineLabel">同じ個数の乱数なら</span><strong id="batchBaseline">—</strong></div>
+          <div class="kv"><span data-i18n="ui.batchSingleLabel">1本ずつの見積もり（中央値）</span><strong id="batchSingle">—</strong></div>
+        </div>
+        <h3 data-i18n="ui.batchChartHeading">位置ごとの最小エントロピー</h3>
+        <div class="batch-chart" id="batchChart" aria-hidden="true"></div>
+        <p class="note" data-i18n="ui.batchChartNote">棒は位置ごとの最小エントロピー（−log₂ 最も多い文字の割合）、点線は同じ個数の乱数の目安です。赤は全部同じ文字の位置、橙は目安の半分に満たない位置です。個数がnのとき、1位置の値はlog₂(n)を超えないので、個数が少ないと本物の乱数でも低く出ます。</p>
+        <h3 data-i18n="ui.notesHeading">気づいたこと</h3>
+        <ul id="batchNotes" class="notes" aria-live="polite"></ul>
+      </section>
+    </div>
+
+    <div class="tab-panel" id="panel-make" role="tabpanel" aria-labelledby="tab-make" hidden>
+      <section class="card" aria-labelledby="genHeading">
+        <h2 id="genHeading" data-i18n="ui.genHeading">安全なトークンを作る</h2>
+        <p data-i18n="ui.genIntro">目標のビット数と文字の集合から、必要な長さが決まります。ブラウザーの暗号用の乱数（crypto.getRandomValues）で、偏りが出ない方法（棄却法）で作ります。作ったトークンはどこにも送りません。</p>
+        <h3 data-i18n="ui.genTableHeading">必要な長さ（文字数）</h3>
+        <div class="table-wrap">
+          <table class="data-table" id="lengthTable">
+            <thead><tr></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
         <div class="form-grid">
           <div class="field">
-            <div class="label-help"><label for="charset" data-i18n="ui.charsetLabel">文字の集合</label>
-              <button type="button" class="help-icon" data-help="charset" aria-label="文字の集合の説明" data-i18n-attr="aria-label:ui.helpCharsetLabel">?</button></div>
-            <select id="charset">
-              <option value="auto" data-i18n="ui.csAuto">自動（見た文字から選ぶ）</option>
-              <option value="digits" data-i18n="ui.csDigits">数字（10種）</option>
-              <option value="hex" data-i18n="ui.csHex">16進数（16種）</option>
-              <option value="base32" data-i18n="ui.csBase32">Base32（32種）</option>
-              <option value="base62" data-i18n="ui.csBase62">英数字（62種）</option>
-              <option value="base64" data-i18n="ui.csBase64">Base64・base64url（64種）</option>
-              <option value="printable" data-i18n="ui.csPrintable">ASCIIの印字できる文字（95種）</option>
-              <option value="custom" data-i18n="ui.csCustom">数を指定する</option>
-            </select>
-          </div>
-          <div class="field" id="customSizeField" hidden>
-            <label for="customSize" data-i18n="ui.customSizeLabel">文字の数（2以上の整数）</label>
-            <input id="customSize" type="text" inputmode="numeric" autocomplete="off" value="100" />
+            <label for="genAlphabet" data-i18n="ui.genAlphabetLabel">文字の集合</label>
+            <select id="genAlphabet"></select>
           </div>
           <div class="field">
-            <div class="label-help"><label for="standard" data-i18n="ui.standardLabel">判定の基準</label>
-              <button type="button" class="help-icon" data-help="standard" aria-label="判定の基準の説明" data-i18n-attr="aria-label:ui.helpStandardLabel">?</button></div>
-            <select id="standard">
-              <option value="session" data-i18n="ui.stSession">セッションID：64ビット（OWASP・NIST SP 800-63B-4）</option>
-              <option value="nist112" data-i18n="ui.stNist112">長く使う鍵：112ビット（NIST SP 800-57、2030年まで）</option>
-              <option value="nist128" data-i18n="ui.stNist128" selected>長く使う鍵：128ビット（NIST SP 800-57、2031年から）</option>
-              <option value="otp" data-i18n="ui.stOtp">ワンタイムパスワードの鍵：160ビット（RFC 4226の推奨）</option>
-              <option value="hs256" data-i18n="ui.stHs256">JWTのHS256の鍵：256ビット（RFC 7518）</option>
-              <option value="custom" data-i18n="ui.stCustom">ビット数を指定する</option>
-            </select>
-          </div>
-          <div class="field" id="customBitsField" hidden>
-            <label for="customBits" data-i18n="ui.customBitsLabel">基準のビット数（1〜1024）</label>
-            <input id="customBits" type="text" inputmode="numeric" autocomplete="off" value="96" aria-describedby="customBitsError" />
-            <p id="customBitsError" class="field-error" aria-live="polite"></p>
-          </div>
-          <div class="field">
-            <div class="label-help"><label for="valid" data-i18n="ui.validLabel">有効な値の数（同時に使われているトークンの数）</label>
-              <button type="button" class="help-icon" data-help="valid" aria-label="有効な値の数の説明" data-i18n-attr="aria-label:ui.helpValidLabel">?</button></div>
-            <input id="valid" type="text" inputmode="numeric" autocomplete="off" value="1" aria-describedby="validError" />
-            <p id="validError" class="field-error" aria-live="polite"></p>
-          </div>
-          <div class="field">
-            <label for="gpus" data-i18n="ui.gpusLabel">GPUの枚数（ハッシュが漏れた場面に掛ける）</label>
-            <input id="gpus" type="text" inputmode="numeric" autocomplete="off" value="1" aria-describedby="gpusError" />
-            <p id="gpusError" class="field-error" aria-live="polite"></p>
-          </div>
-          <div class="field">
-            <label for="customRate" data-i18n="ui.customRateLabel">自由な速さ（回/秒。空欄なら使わない）</label>
-            <input id="customRate" type="text" inputmode="decimal" autocomplete="off" value="" aria-describedby="customRateError" />
-            <p id="customRateError" class="field-error" aria-live="polite"></p>
+            <label for="genBits" data-i18n="ui.genBitsLabel">目標のビット数</label>
+            <select id="genBits"></select>
           </div>
         </div>
-      </details>
-    </section>
-
-    <section class="card" aria-labelledby="resultHeading">
-      <h2 id="resultHeading" data-i18n="ui.resultHeading">結果</h2>
-      <p id="verdict" class="verdict" aria-live="polite"></p>
-      <div class="result-grid">
-        <div class="kv kv-main"><span data-i18n="ui.bitsLabel">ランダムな部分</span><strong id="bits">—</strong><small id="bitsKind"></small></div>
-        <div class="kv"><span data-i18n="ui.formatLabel">形式</span><strong id="format">—</strong></div>
-        <div class="kv"><span data-i18n="ui.charsetResultLabel">文字の集合</span><strong id="alphabet">—</strong></div>
-        <div class="kv"><span data-i18n="ui.countedLabel">数えた文字</span><strong id="counted">—</strong></div>
-        <div class="kv"><span data-i18n="ui.perCharLabel">1文字あたり</span><strong id="perChar">—</strong></div>
-        <div class="kv"><span><span data-i18n="ui.shannonLabel">1文字あたりのばらつき（シャノン）</span>
-          <button type="button" class="help-icon" data-help="shannon" aria-label="シャノンエントロピーの説明" data-i18n-attr="aria-label:ui.helpShannonLabel">?</button></span>
-          <strong id="shannon">—</strong></div>
-      </div>
-      <div class="gauge-wrap">
-        <p class="gauge-label" id="gaugeLabel" data-i18n="ui.gaugeLabel">ビット数と基準（0〜256ビット）</p>
-        <div class="gauge" id="gauge" aria-hidden="true">
-          <div class="gauge-fill" id="gaugeFill"></div>
-          <div class="gauge-mark" id="gaugeMark"></div>
+        <p id="genLength" class="gen-length"></p>
+        <p id="genBias" class="note"></p>
+        <p class="note" data-i18n="ui.genRandomNote">Math.random は暗号用の乱数ではないので使いません。</p>
+        <div class="button-row">
+          <button type="button" id="genMake" data-i18n="ui.genMake">作る</button>
         </div>
-        <div class="gauge-scale" aria-hidden="true"><span>0</span><span>64</span><span>128</span><span>192</span><span>256</span></div>
-      </div>
-      <h3 data-i18n="ui.notesHeading">気づいたこと</h3>
-      <ul id="notes" class="notes" aria-live="polite"></ul>
-
-      <div class="heading-help"><h3 data-i18n="ui.timeHeading">総当たりで当たるまでの時間</h3>
-        <button type="button" class="help-icon" data-help="time" aria-label="攻撃の場面の説明" data-i18n-attr="aria-label:ui.helpTimeLabel">?</button></div>
-      <div class="table-wrap">
-        <table class="data-table" id="timeTable">
-          <thead>
-            <tr>
-              <th scope="col" data-i18n="ui.colScenario">場面</th><th scope="col" data-i18n="ui.colRate">速さ</th>
-              <th scope="col" data-i18n="ui.colAvg">平均</th><th scope="col" data-i18n="ui.colWorst">最悪（全部試す）</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <p class="note" data-i18n="ui.timeNote">候補がN通り、有効な値がK個あるとき、重複なしで1つずつ試して最初に当たるまでの回数は平均 (N+1)÷(K+1)、最悪N−K+1です。ハッシュが漏れた場面の速さは、hashcat 6.2.6のRTX 5090 1枚の公開ベンチマークの値です。</p>
-
-      <div class="heading-help"><h3 data-i18n="ui.scannersHeading">シークレット検出ツールから見えるか</h3>
-        <button type="button" class="help-icon" data-help="scanners" aria-label="シークレット検出の説明" data-i18n-attr="aria-label:ui.helpScannersLabel">?</button></div>
-      <div class="table-wrap">
-        <table class="data-table" id="scanTable">
-          <thead>
-            <tr>
-              <th scope="col" data-i18n="ui.colTool">ツール・ルール</th><th scope="col" data-i18n="ui.colLimit">しきい値</th>
-              <th scope="col" data-i18n="ui.colValue">この文字列</th><th scope="col" data-i18n="ui.colHit">見つかるか</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <p class="note" data-i18n="ui.scannersNote">1文字あたりのシャノンエントロピー（文字の出現率から出す値）がしきい値を超えると、シークレットとして見つかります。長さnの文字列ではlog₂(n) が上限なので、短い文字列は本物の乱数でも見つかりません。</p>
-      <p class="note" data-i18n="scan.gitleaksNote">gitleaksは、key・tokenなどの言葉の近くにある文字列にだけ、このしきい値を使います。</p>
-    </section>
-
-    <section class="card" aria-labelledby="batchHeading">
-      <div class="heading-help">
-        <h2 id="batchHeading" data-i18n="ui.batchHeading">複数のトークンをまとめて比べる</h2>
-        <button type="button" class="help-icon" data-help="batch" aria-label="一括分析の説明" data-i18n-attr="aria-label:ui.helpBatchLabel">?</button>
-      </div>
-      <p data-i18n="ui.batchIntro">同じ仕組みで作ったトークンを、1行に1つずつ貼り付けます（20個以上、できれば100個以上）。1本では分からない、固定の部分・重複・増え続ける順番・偏った位置が見えてきます。</p>
-      <div class="label-row">
-        <label for="batch" data-i18n="ui.batchLabel">トークン（1行に1つ）</label>
-        <button type="button" id="batchClear" class="secondary small" data-i18n="ui.clear">クリア</button>
-      </div>
-      <textarea id="batch" rows="6" autocomplete="off" autocapitalize="off" spellcheck="false" wrap="off"></textarea>
-      <div class="samples" role="group" aria-labelledby="batchSamplesLabel">
-        <span id="batchSamplesLabel" class="samples-label" data-i18n="ui.samples">サンプル</span>
-        <button type="button" class="sample-btn batch-sample" data-batch="random" data-i18n="ui.batchSampleRandom">乱数（英数字32字）×100</button>
-        <button type="button" class="sample-btn batch-sample" data-batch="counter" data-i18n="ui.batchSampleCounter">連番×100</button>
-        <button type="button" class="sample-btn batch-sample" data-batch="uuid7" data-i18n="ui.batchSampleUuid7">UUID v7（3ミリ秒おき）×100</button>
-      </div>
-      <p id="batchVerdict" class="verdict" aria-live="polite"></p>
-      <div class="result-grid">
-        <div class="kv"><span data-i18n="ui.batchCountLabel">個数</span><strong id="batchCount">—</strong></div>
-        <div class="kv"><span data-i18n="ui.batchLengthLabel">長さ</span><strong id="batchLength">—</strong></div>
-        <div class="kv"><span data-i18n="ui.charsetResultLabel">文字の集合</span><strong id="batchAlphabet">—</strong></div>
-        <div class="kv"><span data-i18n="ui.batchDupLabel">重複</span><strong id="batchDup">—</strong></div>
-        <div class="kv"><span data-i18n="ui.batchSumLabel">位置ごとの最小エントロピーの和</span><strong id="batchSum">—</strong></div>
-        <div class="kv"><span data-i18n="ui.batchBaselineLabel">同じ個数の乱数なら</span><strong id="batchBaseline">—</strong></div>
-        <div class="kv"><span data-i18n="ui.batchSingleLabel">1本ずつの見積もり（中央値）</span><strong id="batchSingle">—</strong></div>
-      </div>
-      <h3 data-i18n="ui.batchChartHeading">位置ごとの最小エントロピー</h3>
-      <div class="batch-chart" id="batchChart" aria-hidden="true"></div>
-      <p class="note" data-i18n="ui.batchChartNote">棒は位置ごとの最小エントロピー（−log₂ 最も多い文字の割合）、点線は同じ個数の乱数の目安です。赤は全部同じ文字の位置、橙は目安の半分に満たない位置です。個数がnのとき、1位置の値はlog₂(n)を超えないので、個数が少ないと本物の乱数でも低く出ます。</p>
-      <h3 data-i18n="ui.notesHeading">気づいたこと</h3>
-      <ul id="batchNotes" class="notes" aria-live="polite"></ul>
-    </section>
-
-    <section class="card" aria-labelledby="genHeading">
-      <h2 id="genHeading" data-i18n="ui.genHeading">安全なトークンを作る</h2>
-      <p data-i18n="ui.genIntro">目標のビット数と文字の集合から、必要な長さが決まります。ブラウザーの暗号用の乱数（crypto.getRandomValues）で、偏りが出ない方法（棄却法）で作ります。作ったトークンはどこにも送りません。</p>
-      <h3 data-i18n="ui.genTableHeading">必要な長さ（文字数）</h3>
-      <div class="table-wrap">
-        <table class="data-table" id="lengthTable">
-          <thead><tr></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="form-grid">
-        <div class="field">
-          <label for="genAlphabet" data-i18n="ui.genAlphabetLabel">文字の集合</label>
-          <select id="genAlphabet"></select>
+        <label for="genOutput" data-i18n="ui.genOutputLabel">作ったトークン</label>
+        <input id="genOutput" type="text" readonly autocomplete="off" spellcheck="false" />
+        <div class="button-row">
+          <button type="button" id="genCopy" class="secondary" data-i18n="ui.genCopy">コピー</button>
+          <button type="button" id="genToResult" class="secondary" data-i18n="ui.genToResult">結果欄で見る</button>
+          <button type="button" id="genToBatch" class="secondary" data-i18n="ui.genToBatch">100個を一括分析へ</button>
         </div>
-        <div class="field">
-          <label for="genBits" data-i18n="ui.genBitsLabel">目標のビット数</label>
-          <select id="genBits"></select>
-        </div>
-      </div>
-      <p id="genLength" class="gen-length"></p>
-      <p id="genBias" class="note"></p>
-      <p class="note" data-i18n="ui.genRandomNote">Math.random は暗号用の乱数ではないので使いません。</p>
-      <div class="button-row">
-        <button type="button" id="genMake" data-i18n="ui.genMake">作る</button>
-      </div>
-      <label for="genOutput" data-i18n="ui.genOutputLabel">作ったトークン</label>
-      <input id="genOutput" type="text" readonly autocomplete="off" spellcheck="false" />
-      <div class="button-row">
-        <button type="button" id="genCopy" class="secondary" data-i18n="ui.genCopy">コピー</button>
-        <button type="button" id="genToResult" class="secondary" data-i18n="ui.genToResult">結果欄で見る</button>
-        <button type="button" id="genToBatch" class="secondary" data-i18n="ui.genToBatch">100個を一括分析へ</button>
-      </div>
-      <p id="genStatus" class="status" aria-live="polite"></p>
-    </section>
+        <p id="genStatus" class="status" aria-live="polite"></p>
+      </section>
+    </div>
 
-    <section class="card" aria-labelledby="howHeading">
-      <h2 id="howHeading" data-i18n="ui.howHeading">見積もりの仕組み</h2>
-      <div class="how-grid">
-        <div class="how-item"><h3 data-i18n="ui.howCharsetTitle">文字の集合</h3>
-          <p data-i18n="ui.howCharset">見た文字をすべて含む、いちばん小さい標準の集合（数字・16進数・Base32・英数字・Base64など）を選び、1文字あたりlog₂(文字の数) ビットとします。作り方がわかっているときは「前提を変える」で指定します。</p></div>
-        <div class="how-item"><h3 data-i18n="ui.howBitsTitle">ビット数</h3><p data-i18n="ui.howBits">ビット数 ＝ 数えた文字数 × log₂(文字の数)。UUID・JWT・GitHubのトークンは、形式の決まりからランダムな部分だけを数えます。</p></div>
-        <div class="how-item"><h3 data-i18n="ui.howTimeTitle">時間</h3><p data-i18n="ui.howTime">候補は「2のビット数乗」通りあり、それを場面ごとの速さで試すとして、当たるまでの時間を出します。有効な値が多いほど、どれか1つには早く当たります。</p></div>
-        <div class="how-item"><h3 data-i18n="ui.howLimitTitle">限界</h3><p data-i18n="ui.howLimit">1本の文字列からは、ランダムに作ったかどうかは分かりません。分かるのは上限と、明らかな構造（同じ文字の繰り返し・並び・中身が読める）だけです。</p></div>
-      </div>
-    </section>
-    <section class="card" aria-labelledby="relatedHeading">
-      <h2 id="relatedHeading" data-i18n="ui.relatedHeading">関連ツール</h2>
-      <ul class="related">
-        <li><a href="https://ipusiron.github.io/password-checker/" target="_blank" rel="noopener noreferrer">Day001 Password Checker</a><span class="related-desc" data-i18n="ui.relatedDay001">人が考えたパスワードの強さを、辞書や規則も含めて確かめる</span></li>
-        <li><a href="https://ipusiron.github.io/hash-detector/" target="_blank" rel="noopener noreferrer">Day002 Hash Detector</a><span class="related-desc" data-i18n="ui.relatedDay002">16進数の文字列が、どのハッシュ関数の値かを見分ける</span></li>
-        <li><a href="https://ipusiron.github.io/git-secrets-playground/" target="_blank" rel="noopener noreferrer">Day031 Git Secrets Playground</a><span class="related-desc" data-i18n="ui.relatedDay031">Gitに秘密情報を入れてしまったときの、見つかり方と消し方を試す</span></li>
-        <li><a href="https://ipusiron.github.io/basexx-visualizer/" target="_blank" rel="noopener noreferrer">Day052 BaseXX Visualizer</a><span class="related-desc" data-i18n="ui.relatedDay052">Base32・Base58・Base64などの符号化の違いを比べる</span></li>
-        <li><a href="https://ipusiron.github.io/jwt-inspector/" target="_blank" rel="noopener noreferrer">Day053 JWT Inspector</a><span class="related-desc" data-i18n="ui.relatedDay053">JWTのヘッダー・ペイロード・署名を読み、検証する</span></li>
-        <li><a href="https://ipusiron.github.io/infoquantity-academy/" target="_blank" rel="noopener noreferrer">Day073 InfoQuantity Academy</a><span class="related-desc" data-i18n="ui.relatedDay073">情報量（ビット）の考え方を基礎から学ぶ</span></li>
-        <li><a href="https://ipusiron.github.io/keywalk-analyzer/" target="_blank" rel="noopener noreferrer">Day089 Keywalk Analyzer</a><span class="related-desc" data-i18n="ui.relatedDay089">キーボードの並びに頼ったパスワードを見つける</span></li>
-      </ul>
-      <p class="note" data-i18n="ui.relatedNote">リンクはページを開くだけで、入力したトークンは渡しません。</p>
-    </section>
+    <div class="tab-panel" id="panel-more" role="tabpanel" aria-labelledby="tab-more" hidden>
+      <section class="card" aria-labelledby="howHeading">
+        <h2 id="howHeading" data-i18n="ui.howHeading">見積もりの仕組み</h2>
+        <div class="how-grid">
+          <div class="how-item"><h3 data-i18n="ui.howCharsetTitle">文字の集合</h3>
+            <p data-i18n="ui.howCharset">見た文字をすべて含む、いちばん小さい標準の集合（数字・16進数・Base32・英数字・Base64など）を選び、1文字あたりlog₂(文字の数) ビットとします。作り方がわかっているときは「1本を調べる」の「前提を変える」で指定します。</p></div>
+          <div class="how-item"><h3 data-i18n="ui.howBitsTitle">ビット数</h3><p data-i18n="ui.howBits">ビット数 ＝ 数えた文字数 × log₂(文字の数)。UUID・JWT・GitHubのトークンは、形式の決まりからランダムな部分だけを数えます。</p></div>
+          <div class="how-item"><h3 data-i18n="ui.howTimeTitle">時間</h3><p data-i18n="ui.howTime">候補は「2のビット数乗」通りあり、それを場面ごとの速さで試すとして、当たるまでの時間を出します。有効な値が多いほど、どれか1つには早く当たります。</p></div>
+          <div class="how-item"><h3 data-i18n="ui.howLimitTitle">限界</h3><p data-i18n="ui.howLimit">1本の文字列からは、ランダムに作ったかどうかは分かりません。分かるのは上限と、明らかな構造（同じ文字の繰り返し・並び・中身が読める）だけです。</p></div>
+        </div>
+      </section>
+      <section class="card" aria-labelledby="relatedHeading">
+        <h2 id="relatedHeading" data-i18n="ui.relatedHeading">関連ツール</h2>
+        <ul class="related">
+          <li><a href="https://ipusiron.github.io/password-checker/" target="_blank" rel="noopener noreferrer">Day001 Password Checker</a><span class="related-desc" data-i18n="ui.relatedDay001">人が考えたパスワードの強さを、辞書や規則も含めて確かめる</span></li>
+          <li><a href="https://ipusiron.github.io/hash-detector/" target="_blank" rel="noopener noreferrer">Day002 Hash Detector</a><span class="related-desc" data-i18n="ui.relatedDay002">16進数の文字列が、どのハッシュ関数の値かを見分ける</span></li>
+          <li><a href="https://ipusiron.github.io/git-secrets-playground/" target="_blank" rel="noopener noreferrer">Day031 Git Secrets Playground</a><span class="related-desc" data-i18n="ui.relatedDay031">Gitに秘密情報を入れてしまったときの、見つかり方と消し方を試す</span></li>
+          <li><a href="https://ipusiron.github.io/basexx-visualizer/" target="_blank" rel="noopener noreferrer">Day052 BaseXX Visualizer</a><span class="related-desc" data-i18n="ui.relatedDay052">Base32・Base58・Base64などの符号化の違いを比べる</span></li>
+          <li><a href="https://ipusiron.github.io/jwt-inspector/" target="_blank" rel="noopener noreferrer">Day053 JWT Inspector</a><span class="related-desc" data-i18n="ui.relatedDay053">JWTのヘッダー・ペイロード・署名を読み、検証する</span></li>
+          <li><a href="https://ipusiron.github.io/infoquantity-academy/" target="_blank" rel="noopener noreferrer">Day073 InfoQuantity Academy</a><span class="related-desc" data-i18n="ui.relatedDay073">情報量（ビット）の考え方を基礎から学ぶ</span></li>
+          <li><a href="https://ipusiron.github.io/keywalk-analyzer/" target="_blank" rel="noopener noreferrer">Day089 Keywalk Analyzer</a><span class="related-desc" data-i18n="ui.relatedDay089">キーボードの並びに頼ったパスワードを見つける</span></li>
+        </ul>
+        <p class="note" data-i18n="ui.relatedNote">リンクはページを開くだけで、入力したトークンは渡しません。</p>
+      </section>
+    </div>
+
     <dialog id="helpDialog" class="help-dialog" aria-labelledby="helpTitle">
       <div class="help-head">
         <h2 id="helpTitle"></h2>
@@ -319,6 +339,7 @@
   <script src="js/samples.js" defer></script>
   <script src="js/entropy-core.js" defer></script>
   <script src="js/theme.js" defer></script>
+  <script src="js/tabs.js" defer></script>
   <script src="script.js" defer></script>
 </body>
 

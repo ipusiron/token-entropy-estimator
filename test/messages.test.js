@@ -11,7 +11,7 @@ const JAPANESE = new RegExp('[' + [[0x3000, 0x303f], [0x3040, 0x30ff], [0x3400, 
 const stripComments = (src) => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`])\/\/.*$/gm, '$1');
 
 test('画面の文言は messages.js に集め、ほかの JS のコード（コメント以外）に日本語を書かない', () => {
-  for (const f of ['script.js', 'js/entropy-core.js', 'js/samples.js', 'js/theme.js', 'js/theme-init.js', 'js/i18n.js']) {
+  for (const f of ['script.js', 'js/entropy-core.js', 'js/samples.js', 'js/theme.js', 'js/theme-init.js', 'js/i18n.js', 'js/tabs.js']) {
     const lines = stripComments(read(f)).split('\n');
     const hit = lines.findIndex((l) => JAPANESE.test(l));
     assert.equal(hit, -1, `${f}:${hit + 1} ${lines[hit]}`);

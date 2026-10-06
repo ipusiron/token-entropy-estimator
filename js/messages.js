@@ -12,6 +12,11 @@
     'ui.intro2': 'ランダムかどうかは、文字列そのものではなく作り方で決まります。ここで出すビット数は「一様な乱数で作ったとしたら」の上限です。'
       + '人が考えたパスワードや、同じ文字の繰り返しは、この値よりずっと弱くなります。',
     'ui.intro3': '入力はブラウザーの中だけで扱い、どこにも送りません。',
+    'ui.tabsLabel': '機能の切り替え',
+    'ui.tabSingle': '1本を調べる',
+    'ui.tabBatch': 'まとめて比べる',
+    'ui.tabMake': '作る',
+    'ui.tabMore': '補講',
     'ui.inputHeading': '入力',
     'ui.tokenLabel': 'トークン',
     'ui.samples': 'サンプル',
@@ -75,7 +80,7 @@
     'ui.howHeading': '見積もりの仕組み',
     'ui.howCharsetTitle': '文字の集合',
     'ui.howCharset': '見た文字をすべて含む、いちばん小さい標準の集合（数字・16進数・Base32・英数字・Base64など）を選び、1文字あたりlog₂(文字の数) ビットとします。'
-      + '作り方がわかっているときは「前提を変える」で指定します。',
+      + '作り方がわかっているときは「1本を調べる」の「前提を変える」で指定します。',
     'ui.howBitsTitle': 'ビット数',
     'ui.howBits': 'ビット数 ＝ 数えた文字数 × log₂(文字の数)。UUID・JWT・GitHubのトークンは、形式の決まりからランダムな部分だけを数えます。',
     'ui.howTimeTitle': '時間',
@@ -325,6 +330,11 @@
     'ui.intro2': 'Whether a string is random depends on how it was made, not on the string itself. The bits shown here are an upper bound '
       + '"if it was made with a uniform random generator". Passwords people make up and repeated characters are much weaker than this value.',
     'ui.intro3': 'Your input is handled only inside your browser and is never sent anywhere.',
+    'ui.tabsLabel': 'Switch features',
+    'ui.tabSingle': 'Check one',
+    'ui.tabBatch': 'Compare many',
+    'ui.tabMake': 'Generate',
+    'ui.tabMore': 'Extras',
     'ui.inputHeading': 'Input',
     'ui.tokenLabel': 'Token',
     'ui.samples': 'Samples',
@@ -388,7 +398,7 @@
     'ui.howHeading': 'How the estimate works',
     'ui.howCharsetTitle': 'Character set',
     'ui.howCharset': 'It picks the smallest standard set that contains every character seen (digits, hexadecimal, Base32, alphanumeric, Base64 and so on) '
-      + 'and counts log₂(set size) bits per character. If you know how the string was made, set it under "Change the assumptions".',
+      + 'and counts log₂(set size) bits per character. If you know how the string was made, set it under "Change the assumptions" in "Check one".',
     'ui.howBitsTitle': 'Bits',
     'ui.howBits': 'Bits = characters counted × log₂(set size). For UUIDs, JWTs and GitHub tokens, only the random part defined by the format is counted.',
     'ui.howTimeTitle': 'Time',

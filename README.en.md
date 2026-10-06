@@ -364,6 +364,7 @@ token-entropy-estimator/
 │   ├── i18n.js             # Choosing and switching the language (Japanese, English)
 │   ├── messages.js         # Strings shown on the screen (Japanese, English)
 │   ├── samples.js          # Samples
+│   ├── tabs.js             # Tab switching (arrow keys, Home, End, #tab= in the URL)
 │   ├── theme-init.js       # Applies the theme at the start of loading
 │   └── theme.js            # Light/dark switching
 ├── test/                   # Tests (node:test)
@@ -372,12 +373,13 @@ token-entropy-estimator/
 │   ├── core.test.js        # Character set, format, structure warnings, input validation
 │   ├── format.test.js      # Line length, line endings, minimum line counts
 │   ├── generate.test.js    # Required length, modulo bias, generation by rejection sampling
-│   ├── html.test.js        # CSP, element ids, labels, aria-live, help
+│   ├── html.test.js        # CSP, element ids, labels, aria-live, help, tabs
 │   ├── i18n.test.js        # Keys of both languages, no Japanese in English, initial language
 │   ├── load.js             # Loads the scripts in js/ into the tests
 │   ├── messages.test.js    # Where strings live and their keys
 │   ├── readme.test.js      # Tables, structure, tree and images of both READMEs
 │   ├── scanners.test.js    # Shannon entropy and secret scanner thresholds
+│   ├── tabs.test.js        # Tab switching and the tab opened from the URL
 │   └── time.test.js        # Guesses until a hit, time units, large-number words
 ├── .gitignore              # Git ignore settings
 ├── .nojekyll               # Tells GitHub Pages not to use Jekyll

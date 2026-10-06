@@ -406,6 +406,7 @@ token-entropy-estimator/
 │   ├── i18n.js             # 画面の言語（日本語・英語）の決定と切り替え
 │   ├── messages.js         # 画面に出す文言（日本語・英語）
 │   ├── samples.js          # サンプル
+│   ├── tabs.js             # タブの切り替え（矢印キー・Home・End、URLの#tab=）
 │   ├── theme-init.js       # 読み込みの最初にテーマを当てる
 │   └── theme.js            # ライト／ダークの切り替え
 ├── test/                   # テスト（node:test）
@@ -414,12 +415,13 @@ token-entropy-estimator/
 │   ├── core.test.js        # 文字の集合・形式・構造の警告・入力の検証
 │   ├── format.test.js      # 行の長さ・改行コード・行数の下限
 │   ├── generate.test.js    # 必要な長さ・剰余の偏り・棄却法での生成
-│   ├── html.test.js        # CSP・要素のid・ラベル・aria-live・ヘルプ
+│   ├── html.test.js        # CSP・要素のid・ラベル・aria-live・ヘルプ・タブ
 │   ├── i18n.test.js        # 日英の辞書のキー・英語に日本語がないこと・初期の言語
 │   ├── load.js             # js/のスクリプトをテストに読み込む
 │   ├── messages.test.js    # 文言の置き場所とキー
 │   ├── readme.test.js      # 日英のREADMEの表・構成・ツリー・画像
 │   ├── scanners.test.js    # シャノンエントロピーとシークレット検出のしきい値
+│   ├── tabs.test.js        # タブの切り替え・URLから開くタブ
 │   └── time.test.js        # 当たるまでの回数・時間の単位・大きな数の区切り
 ├── .gitignore              # Gitの除外設定
 ├── .nojekyll               # GitHub PagesでJekyllを使わない指定

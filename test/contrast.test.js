@@ -51,3 +51,22 @@ test('入力欄は16px、操作の要素は44px以上。動きを減らす設定
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /min-height: 100dvh;/);
 });
+
+test('タブの色は検査した組だけを使う。選ばれていないタブは button の既定（アクセントの下地に白い文字）を打ち消す', () => {
+  const rule = (selector) => {
+    const i = css.indexOf(`${selector} {`);
+    assert.ok(i >= 0, selector);
+    return css.slice(i, css.indexOf('}', i));
+  };
+  // 選ばれていない＝muted／surface（下地は透明で .tabs の surface）、ホバー＝text／surface-2、選ばれた＝on-accent／accent・accent-hover
+  assert.match(rule('.tabs'), /background: var\(--surface\);/);
+  assert.match(rule('.tab'), /background: transparent;[^}]*color: var\(--muted\);/);
+  assert.match(rule('.tab:hover'), /background: var\(--surface-2\);[^}]*color: var\(--text\);/);
+  assert.match(rule('.tab[aria-selected="true"]'), /background: var\(--accent\);[^}]*color: var\(--on-accent\);/);
+  assert.match(rule('.tab[aria-selected="true"]:hover'), /background: var\(--accent-hover\);/);
+  for (const pair of ['muted/surface', 'text/surface-2', 'on-accent/accent', 'on-accent/accent-hover']) {
+    assert.ok(PAIRS.some(([a, b]) => `${a}/${b}` === pair), pair);
+  }
+  // タブの間は、フォーカスの枠の外側（3px＋2px）が隣のタブにかからない広さ
+  assert.match(rule('.tabs'), /gap: 8px;[^}]*padding: 6px;/);
+});
