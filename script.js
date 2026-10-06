@@ -361,12 +361,14 @@
         say('gen.copyFailed');
       }
     });
+    // 送り先のタブに切り替え、送った先の見出しまで動かして、入力欄にフォーカスを置く
     $('genToResult').addEventListener('click', () => {
       const v = $('genOutput').value;
       if (!v) return;
       $('token').value = v;
       state.token = v;
       render();
+      tabs.select('single');
       $('resultHeading').scrollIntoView({ block: 'start' });
       $('token').focus({ preventScroll: true });
     });
@@ -376,7 +378,20 @@
       state.batch = $('batch').value;
       analyzeBatch();
       say('gen.sentBatch');
+      tabs.select('batch');
+      $('batchHeading').scrollIntoView({ block: 'start' });
+      $('batch').focus({ preventScroll: true });
     });
+  }
+
+  // タブ（1本を調べる・まとめて比べる・作る・補講）。URL の #tab= か ?tab= で開くタブを選べる
+  let tabs = null;
+
+  function initTabs() {
+    const TT = globalThis.TokenTabs;
+    tabs = TT.init(document.querySelector('.tabs'));
+    const first = TT.fromUrl(location.search, location.hash);
+    if (first) tabs.select(first);
   }
 
   function render() {
@@ -477,6 +492,7 @@
   }
 
   initLanguage();
+  initTabs();
   bind();
   bindBatch();
   bindGen();

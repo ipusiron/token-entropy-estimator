@@ -295,6 +295,73 @@ a {
   margin: 8px 0;
 }
 
+/* タブ（1本を調べる・まとめて比べる・作る・補講）。フォーカスの枠（外側5px）が隣のタブにかからないよう、間は8px */
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+/* 選ばれていないタブは、button の既定（アクセントの色の下地に白い文字）を打ち消す */
+.tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px;
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.tab:hover {
+  background: var(--surface-2);
+  border-color: var(--surface-2);
+  color: var(--text);
+}
+
+.tab[aria-selected="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.tab[aria-selected="true"]:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.tab-icon {
+  flex-shrink: 0;
+}
+
+.tab-panel[hidden] {
+  display: none;
+}
+
+/* 幅の狭い画面では2列×2段（4列だと「まとめて比べる」「Compare many」が折れる）。さらに狭いと、アイコンを文字の上に置く */
+@media (max-width: 720px) {
+  .tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 380px) {
+  .tab {
+    flex-direction: column;
+    gap: 0;
+    padding: 4px;
+  }
+}
+
 /* 入力 */
 .label-row {
   display: flex;

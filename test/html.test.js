@@ -24,9 +24,10 @@ test('インラインのスクリプト・イベントハンドラー・style �
   assert.doesNotMatch(html, /\sstyle=/);
   assert.doesNotMatch(html, /type="module"/);
   const scripts = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(scripts, ['js/theme-init.js', 'js/messages.js', 'js/i18n.js', 'js/samples.js', 'js/entropy-core.js', 'js/theme.js', 'script.js']);
+  assert.deepEqual(scripts, ['js/theme-init.js', 'js/messages.js', 'js/i18n.js', 'js/samples.js', 'js/entropy-core.js', 'js/theme.js', 'js/tabs.js',
+    'script.js']);
   for (const s of scripts.slice(1)) assert.match(html, new RegExp(`<script src="${s}" defer></script>`));
-  for (const f of ['script.js', 'js/theme.js', 'js/entropy-core.js', 'js/i18n.js']) {
+  for (const f of ['script.js', 'js/theme.js', 'js/entropy-core.js', 'js/i18n.js', 'js/tabs.js']) {
     const src = read(f);
     assert.doesNotMatch(src, /innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function/, f);
     assert.doesNotMatch(src, /\.cssText|setAttribute\('style'|alert\(|confirm\(/, f);
@@ -39,7 +40,7 @@ test('画面の要素の id がそろっている（それぞれ1つだけ）', 
     'shannon', 'gauge', 'gaugeFill', 'gaugeMark', 'notes', 'timeTable', 'scanTable', 'btnTheme', 'btnLang', 'helpDialog', 'helpTitle', 'helpClose',
     'batch', 'batchClear', 'batchVerdict', 'batchCount', 'batchLength', 'batchAlphabet', 'batchDup', 'batchSum', 'batchBaseline', 'batchSingle',
     'batchChart', 'batchNotes', 'lengthTable', 'genAlphabet', 'genBits', 'genLength', 'genBias', 'genMake', 'genOutput', 'genCopy', 'genToResult',
-    'genToBatch', 'genStatus'];
+    'genToBatch', 'genStatus', 'tab-single', 'tab-batch', 'tab-make', 'tab-more', 'panel-single', 'panel-batch', 'panel-make', 'panel-more'];
   for (const id of ids) assert.equal(html.split(`id="${id}"`).length - 1, 1, id);
   const all = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
   assert.equal(new Set(all).size, all.length);
@@ -76,6 +77,35 @@ test('一括分析のサンプルの行と判定の間は、フォーカスの�
   const gap = css.match(/\.samples \+ \.verdict \{\s*margin-top: (\d+)px;/);
   assert.ok(gap, '.samples + .verdict の margin-top がない');
   assert.ok(Number(gap[1]) >= ring + 8, `${gap[1]}px < ${ring + 8}px`);
+});
+
+test('タブは4つ（1本を調べる・まとめて比べる・作る・補講）。タブとパネルが対応し、最初のタブだけが選ばれて見えている', async () => {
+  const { load } = await import('./load.js');
+  const { TokenTabs } = load('js/tabs.js');
+  const tabRe = new RegExp('<button type="button" class="tab" role="tab" id="tab-(\\w+)" aria-controls="panel-(\\w+)" '
+    + 'aria-selected="(\\w+)" tabindex="(-?\\d)" data-tab="(\\w+)">', 'g');
+  const tabs = [...html.matchAll(tabRe)];
+  assert.deepEqual(tabs.map((m) => m[1]), [...TokenTabs.NAMES]);
+  for (const [, id, panel, selected, tabindex, name] of tabs) {
+    assert.equal(panel, id);
+    assert.equal(name, id);
+    assert.equal(selected, String(id === 'single'));
+    assert.equal(tabindex, id === 'single' ? '0' : '-1');
+    const hidden = id === 'single' ? '' : ' hidden';
+    assert.match(html, new RegExp(`<div class="tab-panel" id="panel-${id}" role="tabpanel" aria-labelledby="tab-${id}"${hidden}>`), id);
+  }
+  assert.match(html, /<div class="tabs" role="tablist" aria-label="[^"]+" data-i18n-attr="aria-label:ui\.tabsLabel">/);
+  // パネルごとの中身（見出しの id で確かめる）。ヘルプのダイアログはどのパネルにも入れない
+  const panelOf = (needle) => {
+    const at = html.indexOf(needle);
+    const opens = [...html.slice(0, at).matchAll(/<div class="tab-panel" id="panel-(\w+)"/g)];
+    const lastOpen = html.lastIndexOf('<div class="tab-panel"', at);
+    const closed = html.slice(lastOpen, at).split('\n').some((l) => l === '    </div>');
+    return opens.length && !closed ? opens[opens.length - 1][1] : null;
+  };
+  const expected = { inputHeading: 'single', resultHeading: 'single', batchHeading: 'batch', genHeading: 'make', howHeading: 'more', relatedHeading: 'more',
+    helpDialog: null, introHeading: null };
+  for (const [id, panel] of Object.entries(expected)) assert.equal(panelOf(`id="${id}"`), panel, id);
 });
 
 test('判定の基準の選択肢は、ロジックの基準と同じ（既定は128ビット）', async () => {

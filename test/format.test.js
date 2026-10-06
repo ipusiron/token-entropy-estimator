@@ -5,7 +5,8 @@ import { read } from './load.js';
 const lines = (f) => read(f).split('\n');
 const CODE = ['script.js', 'style.css', 'js/entropy-core.js', 'js/messages.js', 'js/samples.js', 'js/theme.js', 'js/theme-init.js', 'js/i18n.js',
   'test/load.js', 'test/core.test.js', 'test/time.test.js', 'test/scanners.test.js', 'test/html.test.js', 'test/contrast.test.js',
-  'test/format.test.js', 'test/messages.test.js', 'test/i18n.test.js', 'test/readme.test.js', 'test/batch.test.js', 'test/generate.test.js'];
+  'test/format.test.js', 'test/messages.test.js', 'test/i18n.test.js', 'test/readme.test.js', 'test/batch.test.js', 'test/generate.test.js',
+  'js/tabs.js', 'test/tabs.test.js'];
 
 test('JS・CSS・テストの最長行は160文字以下、index.html は250文字以下（1行に詰め込んだファイルを見つける）', () => {
   for (const f of CODE) {
