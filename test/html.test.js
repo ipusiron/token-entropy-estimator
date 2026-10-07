@@ -117,3 +117,13 @@ test('判定の基準の選択肢は、ロジックの基準と同じ（既定�
   const charsets = [...html.matchAll(/<option value="(\w+)" data-i18n="ui\.cs\w+"/g)].map((m) => m[1]);
   assert.deepEqual(charsets, ['auto', ...Object.keys(TE.OVERRIDES), 'custom']);
 });
+
+test('関連ツールの名前は各ツールの README の正式な表記（Day089 は KeyWalk Analyzer）で、画面・辞書・README（日英）でそろう', () => {
+  const names = [...html.matchAll(/<a href="https:\/\/ipusiron\.github\.io\/[a-z0-9-]+\/"[^>]*>(Day\d{3} [^<]+)<\/a>/g)].map((m) => m[1]);
+  assert.ok(names.includes('Day089 KeyWalk Analyzer'), names.join(', '));
+  for (const f of ['index.html', 'js/messages.js', 'README.md', 'README.en.md']) assert.doesNotMatch(read(f), /Keywalk/, f);
+  for (const f of ['README.md', 'README.en.md']) {
+    const text = read(f);
+    for (const n of names) assert.ok(text.includes(`[${n}](`), `${f}: ${n}`);
+  }
+});
