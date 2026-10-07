@@ -280,7 +280,7 @@ If a character is chosen by the remainder of one byte (0-255) divided by the set
 - Making puzzles and cipher games: estimate how long a passphrase or random string would hold out against brute force (noting that words people make up are tried first with dictionaries)
 - At home: check how many bits the default router or Wi-Fi password (alphanumerics made by a machine) has. Check passwords people make up with [Day001 Password Checker](https://ipusiron.github.io/password-checker/)
 - Articles and teaching material: produce the numbers for tables and figures, with sources for the attack speeds (the hashcat RTX 5090 benchmark) and the standards
-- With other tools: look inside JWTs with [Day053 JWT Inspector](https://ipusiron.github.io/jwt-inspector/), hexadecimal strings that look like hashes with [Day002 Hash Detector](https://ipusiron.github.io/hash-detector/), and keyboard runs with [Day089 Keywalk Analyzer](https://ipusiron.github.io/keywalk-analyzer/)
+- With other tools: look inside JWTs with [Day053 JWT Inspector](https://ipusiron.github.io/jwt-inspector/), hexadecimal strings that look like hashes with [Day002 Hash Detector](https://ipusiron.github.io/hash-detector/), and keyboard runs with [Day089 KeyWalk Analyzer](https://ipusiron.github.io/keywalk-analyzer/)
 
 ---
 
@@ -292,7 +292,7 @@ If a character is chosen by the remainder of one byte (0-255) divided by the set
 - [Day052 BaseXX Visualizer](https://ipusiron.github.io/basexx-visualizer/): compare encodings such as Base32, Base58 and Base64
 - [Day053 JWT Inspector](https://ipusiron.github.io/jwt-inspector/): read and verify the header, payload and signature of a JWT
 - [Day073 InfoQuantity Academy](https://ipusiron.github.io/infoquantity-academy/): learn the idea of information quantity (bits) from the basics
-- [Day089 Keywalk Analyzer](https://ipusiron.github.io/keywalk-analyzer/): find passwords that rely on keyboard runs
+- [Day089 KeyWalk Analyzer](https://ipusiron.github.io/keywalk-analyzer/): find passwords that rely on keyboard runs
 
 The links in the "Extras" tab only open the pages; the token you entered is not passed on.
 

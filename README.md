@@ -322,7 +322,7 @@ hub: true
 - 謎解き・暗号パズルの制作: 作った合言葉やランダムな文字列が、総当たりでどれくらい持つかの目安を出す（人が考えた言葉は辞書で先に試される点も添えて）
 - 暮らし・家庭: ルーターやWi-Fiの初期パスワード（機械が作った英数字）が何ビットかを確かめる。人が考えたパスワードは[Day001 Password Checker](https://ipusiron.github.io/password-checker/)で確かめる
 - 記事・資料作り: 攻撃の速さ（hashcatのRTX 5090のベンチマーク）と基準の出典つきで、表や図の数字を出す
-- ほかのツールとの組み合わせ: JWTの中身は[Day053 JWT Inspector](https://ipusiron.github.io/jwt-inspector/)、ハッシュ値らしい16進数は[Day002 Hash Detector](https://ipusiron.github.io/hash-detector/)、キーボードの並びは[Day089 Keywalk Analyzer](https://ipusiron.github.io/keywalk-analyzer/)
+- ほかのツールとの組み合わせ: JWTの中身は[Day053 JWT Inspector](https://ipusiron.github.io/jwt-inspector/)、ハッシュ値らしい16進数は[Day002 Hash Detector](https://ipusiron.github.io/hash-detector/)、キーボードの並びは[Day089 KeyWalk Analyzer](https://ipusiron.github.io/keywalk-analyzer/)
 
 ---
 
@@ -334,7 +334,7 @@ hub: true
 - [Day052 BaseXX Visualizer](https://ipusiron.github.io/basexx-visualizer/): Base32・Base58・Base64などの符号化の違いを比べる
 - [Day053 JWT Inspector](https://ipusiron.github.io/jwt-inspector/): JWTのヘッダー・ペイロード・署名を読み、検証する
 - [Day073 InfoQuantity Academy](https://ipusiron.github.io/infoquantity-academy/): 情報量（ビット）の考え方を基礎から学ぶ
-- [Day089 Keywalk Analyzer](https://ipusiron.github.io/keywalk-analyzer/): キーボードの並びに頼ったパスワードを見つける
+- [Day089 KeyWalk Analyzer](https://ipusiron.github.io/keywalk-analyzer/): キーボードの並びに頼ったパスワードを見つける
 
 「補講」タブのリンクはページを開くだけで、入力したトークンは渡しません。
 

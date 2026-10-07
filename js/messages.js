@@ -272,7 +272,7 @@
     'w.allSame': 'すべて同じ文字です。',
     'w.repeated': '{period}文字のかたまりの繰り返しです。',
     'w.sequence': '{run}文字続く並び（abcd・9876など）があります。この長さの文字列では、偶然にはまず現れません。',
-    'w.keyboard': 'キーボードの並び（{run}文字、qwertyなど）があります（Day089 Keywalk Analyzer）。',
+    'w.keyboard': 'キーボードの並び（{run}文字、qwertyなど）があります（Day089 KeyWalk Analyzer）。',
     'w.lowVariety': '使っている文字の種類が少なく、偏りがあります。',
     'w.human': '人が考えた文字列（パスワードなど）なら、辞書や規則から先に試されるので、この見積もりよりずっと弱くなります（Day001 Password Checker）。',
     'hash.128': 'MD5など',
@@ -596,7 +596,7 @@
     'w.allSame': 'All characters are the same.',
     'w.repeated': 'It repeats a block of {period} characters.',
     'w.sequence': 'It contains a run of {run} characters (abcd, 9876 and so on). A string of this length almost never has one by chance.',
-    'w.keyboard': 'It contains a keyboard run ({run} characters, such as qwerty) (Day089 Keywalk Analyzer).',
+    'w.keyboard': 'It contains a keyboard run ({run} characters, such as qwerty) (Day089 KeyWalk Analyzer).',
     'w.lowVariety': 'It uses few kinds of characters and is skewed.',
     'w.human': 'If a person made this string up (a password, for example), dictionaries and rules are tried first, '
       + 'so it is much weaker than this estimate (Day001 Password Checker).',
