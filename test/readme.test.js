@@ -291,3 +291,26 @@ test('画像: 参照はすべて実在し、日本語版は assets/、英語版�
   assert.deepEqual(pngs('assets'), [...new Set(refs.ja)].sort());
   assert.deepEqual(pngs('assets/en'), [...new Set(refs.en)].sort());
 });
+
+test('ユースケースの「このツールならではの使い方」の値は計算部と同じ（日英）', () => {
+  const [ja, en] = [read('README.md'), read('README.en.md')];
+  const bits = (s) => TE.analyze(s).bits;
+  const [six, eight] = [bits('482916'), bits('48291637')];
+  assert.deepEqual([six.toFixed(2), eight.toFixed(2), Math.round(six), Math.round(eight)], ['19.93', '26.58', 20, 27]);
+  const lottery = Math.log2(2e7);
+  assert.equal(lottery.toFixed(1), '24.3');
+  assert.ok(eight > lottery);
+  assert.ok(ja.includes('482916は19.93ビット、8桁の48291637は26.58ビット') && en.includes('482916 come out as 19.93 bits and the eight digits 48291637 as 26.58 bits'));
+  const coupon = TE.analyze('K7Q2ZP');
+  assert.deepEqual([coupon.alphabet.id, coupon.bits], ['base32', 30]);
+  assert.equal((2 ** 30 / 1e8).toFixed(1), '10.7');
+  const avg = 10 ** TE.guesses(coupon.bits, 1000).avg;
+  assert.equal(Math.round(avg / 1e4), 107);
+  assert.ok(ja.includes('30ビット（約10.7億通り）') && ja.includes('平均でおよそ107万回'));
+  assert.ok(en.includes('30 bits (about 1.07 billion possibilities)') && en.includes('about 1.07 million tries'));
+  const ids = (s) => TE.analyze(s).warnings.map((w) => w.id ?? w.key ?? w);
+  assert.equal(bits('123456'), six);
+  assert.ok(ids('123456').includes('sequence') && ids('123456').includes('keyboard'));
+  assert.ok(ids('111111').includes('allSame'));
+  assert.ok(ja.includes('「' + MESSAGES.ja['w.allSame'] + '」') && en.includes('"' + MESSAGES.en['w.allSame'] + '"'));
+});
