@@ -270,6 +270,14 @@ If a character is chosen by the remainder of one byte (0-255) divided by the set
 
 ## 🎯 Use cases
 
+Ways of using this tool in particular
+
+- Restating how small a probability is in bits (math and probability classes): the six digits 482916 come out as 19.93 bits and the eight digits 48291637 as 26.58 bits. n bits is as small as "getting heads on all of n coin tosses", so six digits are about 20 tosses and eight digits about 27. Compared with a lottery with one winning ticket in 20 million (about 24.3 bits), the same yardstick shows that guessing eight digits in one try is harder (the bits assume the digits were chosen by chance)
+- Choosing the length of voucher and coupon codes (running a shop or an event): six characters of capital letters and the digits 2 to 7 (shaped like K7Q2ZP) are detected as Base32 and give 30 bits (about 1.07 billion possibilities). Put the 1,000 codes you hand out into "Number of valid values", and random guessing needs about 1.07 million tries on average before the first hit. The more codes you hand out, the easier a hit becomes, so you can set the length to match the number (mixing in 0, 1, 8 or 9 changes the detected character set; use it together with a limit on attempts and with invalidating used codes)
+- Seeing the habits of numbers people choose (everyday life and psychology classes): 123456 still gives 19.93 bits from its length, the same as 482916, but a sequence note and a keyboard-run note appear. 111111 shows "All characters are the same." The bits are the value for a choice made by chance, and putting the number next to the notes shows that numbers chosen by people lean toward runs and repeats (no note does not prove the number was chosen by chance)
+
+General uses
+
 - Designing API keys and session IDs: decide the length from the target bits (128 bits means 32 hexadecimal or 22 alphanumeric characters). See that UUID v4 has 122 bits and v7 has 74 bits with a timestamp, and decide not to use v7 as a secret
 - Code review and audits: when reviewing how tokens are generated, paste samples to get a sense of whether the random part is large enough (check the generator itself in the code). Collect 100 tokens made by the same mechanism and run batch analysis to check for counters or timestamps
 - Configuring secret scanning: confirm that the thresholds of detect-secrets and gitleaks miss short keys, and explain why pattern rules are needed too
