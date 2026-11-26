@@ -20,7 +20,7 @@ category_en:
   - Password Cracking
   - Security Analysis
 
-difficulty: 4
+difficulty: 3
 
 tags:
   - entropy
